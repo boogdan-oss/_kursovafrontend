@@ -1,0 +1,17 @@
+ПАПКА: frontend/src
+
+РОЛЬ У ПРОЄКТІ
+Код застосунку за функціями: app (каркас), features (сторінки), shared (спільне), store (стан UI).
+
+ФАЙЛИ
+- index.css: Tailwind і токени теми (CSS-змінні світлої і темної теми).
+- main.tsx: Точка входу: монтує React у сторінку.
+- vite-env.d.ts: Типи Vite для TypeScript.
+
+ПІДПАПКИ
+- app/
+- features/
+- shared/
+- store/
+
+Локальна довідка: файл не комітиться (.gitignore).

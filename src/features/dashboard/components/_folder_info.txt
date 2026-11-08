@@ -1,0 +1,11 @@
+ПАПКА: frontend/src/features/dashboard/components
+
+РОЛЬ У ПРОЄКТІ
+Компоненти дашборду. Поки порожні.
+
+ФАЙЛИ
+- PriceChart.tsx: Поки порожній. Графік цін.
+- PriceTable.tsx: Поки порожній. Таблиця цін по біржах.
+- TopOpportunities.tsx: Поки порожній. Топ-3 можливості.
+
+Локальна довідка: файл не комітиться (.gitignore).

@@ -1,0 +1,29 @@
+ПАПКА: frontend
+
+РОЛЬ У ПРОЄКТІ
+Фронтенд: React 18, TypeScript, Vite, Tailwind. Готові тема, базові компоненти shadcn/ui і каркас з усіма маршрутами; сторінки — заглушки, заповнюються за планом розробки.
+
+ФАЙЛИ
+- .dockerignore: Що не копіюється в Docker-образ.
+- .prettierignore: Що Prettier не форматує.
+- .prettierrc: Правила форматування Prettier (+ сортування класів Tailwind).
+- Dockerfile: Стадії dev (Vite), build, prod (Nginx).
+- components.json: Налаштування shadcn/ui: стиль, шляхи до компонентів (@/shared/ui).
+- eslint.config.js: Правила ESLint.
+- index.html: HTML-сторінка, у яку монтується React.
+- nginx.conf: Nginx у prod: віддає збірку, проксіює /api і /ws на бекенд.
+- package-lock.json: Точні версії npm-пакетів.
+- package.json: Залежності і команди: dev, build, lint, test.
+- postcss.config.js: Налаштування PostCSS для Tailwind.
+- tailwind.config.ts: Тема Tailwind: кольори з CSS-змінних (src/index.css), радіуси, шрифт Inter.
+- tsconfig.json: Налаштування TypeScript для коду застосунку.
+- tsconfig.node.json: Налаштування TypeScript для конфігів збірки.
+- tsconfig.tsbuildinfo: Кеш компілятора TypeScript, створюється автоматично.
+- vite.config.ts: Налаштування Vite: псевдонім @, проксі /api на бекенд, Vitest.
+
+ПІДПАПКИ
+- public/
+- src/
+- tests/
+
+Локальна довідка: файл не комітиться (.gitignore).

@@ -1,0 +1,12 @@
+ПАПКА: frontend/tests
+
+РОЛЬ У ПРОЄКТІ
+Тести фронтенду: Vitest і Testing Library.
+
+ФАЙЛИ
+- setup.ts: Підключає матчери jest-dom.
+
+ПІДПАПКИ
+- app/
+
+Локальна довідка: файл не комітиться (.gitignore).
