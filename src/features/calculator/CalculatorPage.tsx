@@ -2,15 +2,18 @@ import { PageHeader } from '@/shared/ui/page-header'
 import { PagePlaceholder } from '@/shared/ui/page-placeholder'
 
 const PLANNED = [
-  'Кількість активу, чистий прибуток, ROI і RR',
-  'Комісії та slippage за глибиною оголошень',
-  'Оцінка ризику угоди',
+  'Параметри: біржі, актив, фіат, сума, ціни купівлі й продажу, комісії, поріг ризику',
+  'Результат: чистий прибуток, ROI, кількість, Spread, slippage, RR, AI Score',
+  'Структура комісій і стакан продавців для розрахунку slippage',
 ]
 
 export function CalculatorPage() {
   return (
     <>
-      <PageHeader title="Калькулятор" description="Симулятор угоди для заданої суми інвестиції" />
+      <PageHeader
+        title="Калькулятор угоди"
+        description="Прибуток, комісії, slippage та співвідношення ризик/прибуток для вашої суми"
+      />
       <PagePlaceholder planned={PLANNED} />
     </>
   )

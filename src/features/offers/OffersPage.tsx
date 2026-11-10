@@ -2,17 +2,17 @@ import { PageHeader } from '@/shared/ui/page-header'
 import { PagePlaceholder } from '@/shared/ui/page-placeholder'
 
 const PLANNED = [
-  'Таблиця: пара, біржа купівлі й продажу, Spread, Net Spread, RR, обсяг, AI Score, ризик',
-  'Фільтри: мін. Spread, Net Spread, AI Score, RR, обсяг, сума інвестиції, біржі, актив, фіат, спосіб оплати',
-  'Приховування низьколіквідних оголошень і сортування за будь-якою колонкою',
+  'Фільтри: купівля чи продаж, актив, фіат, сума, банк, біржі, тільки перевірені продавці',
+  'Підсумок: найкраща ціна, медіана топ-5, спред купівлі й продажу, ризиковані оголошення',
+  'Таблиця: продавець, біржа, ціна, доступний обсяг і ліміти, способи оплати, ризик AI',
 ]
 
 export function OffersPage() {
   return (
     <>
       <PageHeader
-        title="Market Scanner"
-        description="P2P-оголошення і спреди по всіх парах та біржах"
+        title="Сканер P2P-оголошень"
+        description="Оголошення з Binance, Bybit та OKX з фільтрами за банком, сумою й рейтингом"
       />
       <PagePlaceholder planned={PLANNED} />
     </>

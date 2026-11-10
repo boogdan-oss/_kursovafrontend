@@ -2,76 +2,51 @@
 @tailwind components;
 @tailwind utilities;
 
-/*
- * Токени теми у форматі shadcn/ui: "H S% L%" без hsl(), щоб працювала прозорість (bg-primary/10).
- * Основна тема — темна з фіолетовим акцентом; світла — альтернативна.
- */
 @layer base {
   :root {
-    --background: 252 45.5% 97.8%;
-    --foreground: 255 24% 9.8%;
-    --card: 0 0% 100%;
-    --card-foreground: 255 24% 9.8%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 255 24% 9.8%;
-    --primary: 262 83.3% 57.8%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 255 30.8% 94.9%;
-    --secondary-foreground: 255 24% 9.8%;
-    --muted: 255 30.8% 94.9%;
-    --muted-foreground: 252 11.3% 45.1%;
-    --accent: 251 91.3% 95.5%;
-    --accent-foreground: 264 67.4% 34.9%;
-    --destructive: 0 72.2% 50.6%;
-    --destructive-foreground: 0 0% 100%;
-    --success: 142 76.2% 36.3%;
-    --success-foreground: 0 0% 100%;
-    --warning: 32 94.6% 43.7%;
-    --warning-foreground: 0 0% 100%;
-    --info: 200 98% 39.4%;
-    --info-foreground: 0 0% 100%;
-    --border: 255 24% 90.2%;
-    --input: 255 24% 90.2%;
-    --ring: 262 83.3% 57.8%;
-    --chart-1: 262 83.3% 57.8%;
-    --chart-2: 200 98% 39.4%;
-    --chart-3: 142 76.2% 36.3%;
-    --chart-4: 32 94.6% 43.7%;
-    --chart-5: 330 81% 60%;
-    --radius: 0.75rem;
-  }
+    color-scheme: dark;
 
-  .dark {
-    --background: 248 28.6% 5.5%;
-    --foreground: 249 30.4% 95.5%;
-    --card: 250 24% 9.8%;
-    --card-foreground: 249 30.4% 95.5%;
-    --popover: 250 24% 9.8%;
-    --popover-foreground: 249 30.4% 95.5%;
-    --primary: 258 89.5% 66.3%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 251 22.9% 13.7%;
-    --secondary-foreground: 249 30.4% 95.5%;
-    --muted: 251 22.9% 13.7%;
-    --muted-foreground: 250 13.6% 58.2%;
-    --accent: 254 30.1% 16.3%;
-    --accent-foreground: 251 91.3% 95.5%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 100%;
-    --success: 142 70.6% 45.3%;
-    --success-foreground: 0 0% 100%;
-    --warning: 38 92.1% 50.2%;
-    --warning-foreground: 248 28.6% 5.5%;
-    --info: 198 93.2% 59.6%;
-    --info-foreground: 248 28.6% 5.5%;
-    --border: 253 21.3% 17.5%;
-    --input: 253 21.3% 17.5%;
-    --ring: 258 89.5% 66.3%;
-    --chart-1: 258 89.5% 66.3%;
-    --chart-2: 198 93.2% 59.6%;
-    --chart-3: 142 70.6% 45.3%;
-    --chart-4: 38 92.1% 50.2%;
-    --chart-5: 330 81% 60%;
+    --background: 30 30 30;
+    --foreground: 220 221 222;
+    --card: 38 38 38;
+    --card-foreground: 220 221 222;
+    --elevated: 46 46 46;
+    --popover: 46 46 46;
+    --popover-foreground: 220 221 222;
+
+    --primary: 139 108 239;
+    --primary-soft: 46 40 64;
+    --primary-foreground: 220 221 222;
+    --action: 228 228 228;
+    --action-foreground: 30 30 30;
+
+    --secondary: 51 51 51;
+    --secondary-foreground: 220 221 222;
+    --muted: 51 51 51;
+    --muted-foreground: 142 142 142;
+    --accent: 51 51 51;
+    --accent-foreground: 220 221 222;
+
+    --success: 76 195 138;
+    --success-soft: 30 58 46;
+    --destructive: 240 106 106;
+    --destructive-soft: 58 35 38;
+    --destructive-foreground: 220 221 222;
+    --warning: 229 180 84;
+    --warning-soft: 58 50 34;
+
+    --border: 58 58 58;
+    --border-strong: 74 74 74;
+    --input: 58 58 58;
+    --ring: 139 108 239;
+
+    --chart-1: 139 108 239;
+    --chart-2: 240 185 11;
+    --chart-3: 142 142 142;
+    --chart-4: 76 195 138;
+    --chart-5: 229 180 84;
+
+    --radius: 10px;
   }
 }
 

@@ -7,6 +7,7 @@ import { AlertsPage } from '@/features/alerts/AlertsPage'
 import { ArbitragePage } from '@/features/arbitrage/ArbitragePage'
 import { AssistantPage } from '@/features/assistant/AssistantPage'
 import { LoginPage } from '@/features/auth/LoginPage'
+import { ProfilePage } from '@/features/auth/ProfilePage'
 import { RegisterPage } from '@/features/auth/RegisterPage'
 import { CalculatorPage } from '@/features/calculator/CalculatorPage'
 import { CommunityPage } from '@/features/community/CommunityPage'
@@ -14,7 +15,6 @@ import { DashboardPage } from '@/features/dashboard/DashboardPage'
 import { ForecastPage } from '@/features/forecast/ForecastPage'
 import { OffersPage } from '@/features/offers/OffersPage'
 
-// Окремо від router, щоб тести могли підставити createMemoryRouter
 export const routes: RouteObject[] = [
   {
     path: '/',
@@ -28,6 +28,7 @@ export const routes: RouteObject[] = [
       { path: 'assistant', element: <AssistantPage /> },
       { path: 'alerts', element: <AlertsPage /> },
       { path: 'community', element: <CommunityPage /> },
+      { path: 'profile', element: <ProfilePage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },
@@ -40,8 +41,7 @@ export const routes: RouteObject[] = [
   },
 ]
 
-// Поведінка React Router v7 заздалегідь, щоб не було попереджень у консолі
-export const routerFuture = {
+const routerFuture = {
   v7_fetcherPersist: true,
   v7_normalizeFormMethod: true,
   v7_partialHydration: true,

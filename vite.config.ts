@@ -3,7 +3,6 @@ import path from 'node:path'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 
-// Локально API на localhost:8000, у Docker — http://api:8000
 const apiTarget = process.env.VITE_API_PROXY_TARGET ?? 'http://localhost:8000'
 
 export default defineConfig({
@@ -14,12 +13,11 @@ export default defineConfig({
   server: {
     host: true,
     port: 5173,
-    // Docker на Windows не пробрасує події файлової системи
-    watch: process.env.VITE_USE_POLLING === 'true' ? { usePolling: true } : undefined,
-    // У prod те саме робить Nginx (nginx.conf), тому фронтенд ходить на відносні шляхи без CORS
     proxy: {
       '/api': { target: apiTarget, changeOrigin: true },
       '/ws': { target: apiTarget.replace(/^http/, 'ws'), ws: true, changeOrigin: true },
+      '/docs': { target: apiTarget, changeOrigin: true },
+      '/openapi.json': { target: apiTarget, changeOrigin: true },
     },
   },
   test: {

@@ -4,6 +4,7 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
 import { PageHeader } from '@/shared/ui/page-header'
+import { PagePlaceholder } from '@/shared/ui/page-placeholder'
 import { Skeleton } from '@/shared/ui/skeleton'
 
 const COMPONENT_LABELS: Record<string, string> = {
@@ -12,13 +13,24 @@ const COMPONENT_LABELS: Record<string, string> = {
   redis: 'Redis',
 }
 
+const PLANNED = [
+  'Вибір пари, банку й суми угоди',
+  'Показники: активні можливості, найкращий спред, найкращий AI Score, біржі онлайн, сповіщення',
+  'Графік ціни купівлі по біржах і таблиця ефективних цін',
+  'Топ-3 можливості, AI-висновок і популярне в спільноті',
+]
+
 export function DashboardPage() {
   const health = useHealth()
   const ping = usePing()
 
   return (
     <>
-      <PageHeader title="Дашборд" description="Огляд P2P-ринку та стан системи" />
+      <PageHeader
+        title="Огляд ринку"
+        description="Ціни, спреди й можливості на P2P-біржах Binance, Bybit та OKX"
+      />
+      <PagePlaceholder planned={PLANNED} />
 
       <Card>
         <CardHeader className="flex-row items-center justify-between space-y-0">
@@ -72,12 +84,12 @@ export function DashboardPage() {
             Надсилає запит <code className="text-primary">GET /api/v1/ping</code> на бекенд. Той
             самий ендпоінт можна викликати у Swagger:{' '}
             <a
-              href="http://localhost:8000/docs"
+              href="/docs"
               target="_blank"
               rel="noreferrer"
               className="text-primary hover:underline"
             >
-              localhost:8000/docs
+              /docs
             </a>
           </CardDescription>
         </CardHeader>

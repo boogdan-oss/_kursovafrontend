@@ -1,92 +1,59 @@
-import { LogIn, Menu, Moon, Sun } from 'lucide-react'
-import { useState } from 'react'
+import { Bell, Search } from 'lucide-react'
+import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 
-import { Logo, SidebarFooter, SidebarNav } from '@/app/layout/Sidebar'
-import { useHealth } from '@/features/dashboard/hooks'
-import { formatTime } from '@/shared/lib/format'
-import { cn } from '@/shared/lib/utils'
+import { Logo } from '@/app/layout/Logo'
+import { MainNav, MobileNav } from '@/app/layout/Nav'
 import { Button } from '@/shared/ui/button'
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/shared/ui/sheet'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
-import { useSettingsStore } from '@/store/useSettingsStore'
 
-function MobileNav() {
-  const [open, setOpen] = useState(false)
+function HeaderSearch() {
+  const inputRef = useRef<HTMLInputElement>(null)
 
-  return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="md:hidden" aria-label="Відкрити меню">
-          <Menu />
-        </Button>
-      </SheetTrigger>
-      <SheetContent
-        side="left"
-        className="flex w-64 flex-col gap-4 bg-card p-0 pb-6"
-        aria-describedby={undefined}
-      >
-        <SheetTitle className="sr-only">Навігація</SheetTitle>
-        <Logo className="h-16 px-6" />
-        <SidebarNav onNavigate={() => setOpen(false)} />
-        <div className="mt-auto">
-          <SidebarFooter />
-        </div>
-      </SheetContent>
-    </Sheet>
-  )
-}
-
-function ApiStatus() {
-  const { data, isError } = useHealth()
-  const online = !isError && data !== undefined
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      const target = event.target as HTMLElement
+      if (event.key !== '/' || target.closest('input, textarea, select, [contenteditable]')) return
+      event.preventDefault()
+      inputRef.current?.focus()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
 
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <span className="flex cursor-default items-center gap-2 text-sm text-muted-foreground">
-          <span className={cn('size-2 rounded-full', online ? 'bg-success' : 'bg-destructive')} />
-          <span className="hidden sm:inline">{online ? 'API онлайн' : 'API недоступний'}</span>
-        </span>
-      </TooltipTrigger>
-      <TooltipContent>
-        {online ? `Перевірено о ${formatTime(data.time)}` : 'Бекенд не відповідає на /health'}
-      </TooltipContent>
-    </Tooltip>
-  )
-}
-
-function ThemeToggle() {
-  const theme = useSettingsStore((state) => state.theme)
-  const toggleTheme = useSettingsStore((state) => state.toggleTheme)
-  const label = theme === 'dark' ? 'Світла тема' : 'Темна тема'
-
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label={label}>
-          {theme === 'dark' ? <Sun /> : <Moon />}
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent>{label}</TooltipContent>
-    </Tooltip>
+    <label className="hidden h-9 w-[250px] items-center gap-2 rounded-lg border bg-background px-3 focus-within:ring-1 focus-within:ring-ring min-[1400px]:flex">
+      <Search className="size-4 shrink-0 text-muted-foreground" />
+      <input
+        ref={inputRef}
+        type="search"
+        placeholder="Пошук пари або біржі"
+        aria-label="Пошук пари або біржі"
+        className="min-w-0 flex-1 bg-transparent text-caption outline-none placeholder:text-muted-foreground"
+      />
+      <kbd className="rounded-[4px] border px-1.5 py-px font-sans text-small text-muted-foreground">
+        /
+      </kbd>
+    </label>
   )
 }
 
 export function Header() {
   return (
-    <header className="sticky top-0 z-40 flex h-16 items-center gap-3 border-b bg-background/80 px-4 backdrop-blur md:px-6">
-      <MobileNav />
-      <Logo className="md:hidden" />
-      <span className="hidden text-sm text-muted-foreground md:inline">Аналіз P2P-ринку</span>
-      <div className="ml-auto flex items-center gap-2">
-        <ApiStatus />
-        <ThemeToggle />
-        <Button asChild variant="outline" size="sm">
-          <Link to="/login">
-            <LogIn />
-            <span className="hidden sm:inline">Увійти</span>
+    <header className="sticky top-0 z-40 flex h-16 items-center justify-between gap-2 border-b bg-card px-4 md:px-8">
+      <div className="flex items-center gap-2 sm:gap-3">
+        <MobileNav className="xl:hidden" />
+        <Logo />
+      </div>
+      <MainNav className="hidden xl:flex" />
+      <div className="flex items-center gap-2 sm:gap-3">
+        <HeaderSearch />
+        <Button asChild variant="outline" size="icon" className="[&_svg]:size-[18px]">
+          <Link to="/alerts" aria-label="Сповіщення">
+            <Bell />
           </Link>
+        </Button>
+        <Button asChild variant="secondary">
+          <Link to="/login">Увійти</Link>
         </Button>
       </div>
     </header>

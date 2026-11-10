@@ -1,7 +1,7 @@
-import axios from 'axios'
+import axios from "axios"
 
-// Відносний шлях: у dev проксіює Vite, у prod — Nginx
-export const apiClient = axios.create({
-  baseURL: '/api/v1',
-  timeout: 10_000,
-})
+export const API_URL = import.meta.env.VITE_API_URL ?? "";
+
+export const api = axios.create({
+  baseURL: `${API_URL}/api/v1`,
+});

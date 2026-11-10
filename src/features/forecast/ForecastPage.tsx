@@ -2,15 +2,18 @@ import { PageHeader } from '@/shared/ui/page-header'
 import { PagePlaceholder } from '@/shared/ui/page-placeholder'
 
 const PLANNED = [
-  'Графік: факт проти прогнозу з інтервалом довіри',
-  'Метрики моделі: MAE, MAPE, порівняння з бейзлайном',
-  'Вибір пари та горизонту прогнозу',
+  'Показники: поточна ціна, прогноз, інтервал довіри, MAE, порівняння з бейзлайном',
+  'Графік «факт і прогноз» з інтервалом довіри',
+  'Важливість ознак, таблиця «прогноз vs факт», список моделей',
 ]
 
 export function ForecastPage() {
   return (
     <>
-      <PageHeader title="Прогноз" description="AI-прогноз ціни та спреду на 15–60 хвилин" />
+      <PageHeader
+        title="AI-прогноз ціни"
+        description="Прогноз на 15–60 хв на основі історії ринку"
+      />
       <PagePlaceholder planned={PLANNED} />
     </>
   )

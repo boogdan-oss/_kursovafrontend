@@ -2,8 +2,9 @@ import { PageHeader } from '@/shared/ui/page-header'
 import { PagePlaceholder } from '@/shared/ui/page-placeholder'
 
 const PLANNED = [
-  'Чат зі стрімінгом відповідей',
-  'Підказки: найкращі ціни, поточні можливості, прогноз, ризик продавця',
+  'Історія чатів',
+  'Чат зі стрімінгом відповідей; цифри — лише з live-даних через інструменти',
+  'Підказки: порівняти комісії бірж, оцінити ризик продавця, щоденний огляд ринку',
 ]
 
 export function AssistantPage() {
@@ -11,7 +12,7 @@ export function AssistantPage() {
     <>
       <PageHeader
         title="AI-асистент"
-        description="Пояснення ринку природною мовою на основі живих даних"
+        description="Відповідає українською на основі live-даних ринку"
       />
       <PagePlaceholder planned={PLANNED} />
     </>

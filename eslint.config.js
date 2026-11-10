@@ -24,10 +24,8 @@ export default tseslint.config(
     },
   },
   {
-    // Компоненти shadcn експортують поруч варіанти (buttonVariants тощо)
     files: ['src/shared/ui/**/*.tsx'],
     rules: { 'react-refresh/only-export-components': 'off' },
   },
-  // Останнім: вимикає правила, що конфліктують з Prettier
   prettier,
 )
