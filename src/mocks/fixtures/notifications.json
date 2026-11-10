@@ -1,0 +1,38 @@
+{
+  "count": 4,
+  "unread": 2,
+  "items": [
+    {
+      "id": "ntf-1",
+      "rule_id": "rule-2",
+      "text": "AI Score 91 для маршруту Bybit → Binance (+1.42%)",
+      "channel": "telegram",
+      "read": false,
+      "created_at": "2026-11-10T13:42:00Z"
+    },
+    {
+      "id": "ntf-2",
+      "rule_id": "rule-1",
+      "text": "Спред USDT/UAH досяг 1.63% (Bybit → Binance)",
+      "channel": "telegram",
+      "read": false,
+      "created_at": "2026-11-10T13:05:00Z"
+    },
+    {
+      "id": "ntf-3",
+      "rule_id": "rule-4",
+      "text": "Ризиковий продавець newtrader_77 з’явився в топ-10 Bybit",
+      "channel": "app",
+      "read": true,
+      "created_at": "2026-11-10T11:20:00Z"
+    },
+    {
+      "id": "ntf-4",
+      "rule_id": "rule-1",
+      "text": "Спред USDT/UAH досяг 1.52%",
+      "channel": "telegram",
+      "read": true,
+      "created_at": "2026-11-10T09:48:00Z"
+    }
+  ]
+}

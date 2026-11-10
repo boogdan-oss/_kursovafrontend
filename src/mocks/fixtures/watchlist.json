@@ -1,0 +1,55 @@
+{
+  "count": 5,
+  "items": [
+    {
+      "id": "w-1",
+      "asset": "USDT",
+      "quote": "UAH",
+      "exchange": "bybit",
+      "side": "BUY",
+      "price": "41.05",
+      "change_pct": "0.4",
+      "sparkline": ["40.89", "40.93", "40.91", "40.97", "41.00", "40.98", "41.03", "41.05"]
+    },
+    {
+      "id": "w-2",
+      "asset": "USDT",
+      "quote": "UAH",
+      "exchange": "binance",
+      "side": "SELL",
+      "price": "41.72",
+      "change_pct": "0.2",
+      "sparkline": ["41.64", "41.66", "41.63", "41.68", "41.70", "41.69", "41.71", "41.72"]
+    },
+    {
+      "id": "w-3",
+      "asset": "BTC",
+      "quote": "USDT",
+      "exchange": "binance",
+      "side": null,
+      "price": "68420",
+      "change_pct": "1.8",
+      "sparkline": ["67210", "67480", "67390", "67800", "68050", "67960", "68300", "68420"]
+    },
+    {
+      "id": "w-4",
+      "asset": "ETH",
+      "quote": "USDT",
+      "exchange": "okx",
+      "side": null,
+      "price": "3520",
+      "change_pct": "-0.6",
+      "sparkline": ["3541", "3548", "3536", "3539", "3528", "3531", "3524", "3520"]
+    },
+    {
+      "id": "w-5",
+      "asset": "USDT",
+      "quote": "EUR",
+      "exchange": "bybit",
+      "side": null,
+      "price": "0.93",
+      "change_pct": "0.1",
+      "sparkline": ["0.929", "0.929", "0.930", "0.929", "0.930", "0.930", "0.930", "0.930"]
+    }
+  ]
+}

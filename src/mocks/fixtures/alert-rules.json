@@ -1,0 +1,75 @@
+{
+  "count": 5,
+  "items": [
+    {
+      "id": "rule-1",
+      "title": "Спред USDT/UAH > 1.5%",
+      "metric": "spread_pct",
+      "operator": ">",
+      "threshold": "1.5",
+      "asset": "USDT",
+      "fiat": "UAH",
+      "exchanges": ["bybit", "binance"],
+      "channels": ["telegram", "app"],
+      "enabled": true,
+      "last_triggered_at": "2026-11-10T13:05:00Z",
+      "triggered_today": 3
+    },
+    {
+      "id": "rule-2",
+      "title": "AI Score > 85",
+      "metric": "ai_score",
+      "operator": ">",
+      "threshold": "85",
+      "asset": "USDT",
+      "fiat": "UAH",
+      "exchanges": ["binance", "bybit", "okx"],
+      "channels": ["telegram", "app"],
+      "enabled": true,
+      "last_triggered_at": "2026-11-10T13:42:00Z",
+      "triggered_today": 1
+    },
+    {
+      "id": "rule-3",
+      "title": "Чистий прибуток > 500 ₴",
+      "metric": "net_profit",
+      "operator": ">",
+      "threshold": "500",
+      "asset": "USDT",
+      "fiat": "UAH",
+      "exchanges": ["binance", "bybit", "okx"],
+      "channels": ["telegram"],
+      "enabled": true,
+      "last_triggered_at": null,
+      "triggered_today": 0
+    },
+    {
+      "id": "rule-4",
+      "title": "Новий ризиковий продавець у топ-10",
+      "metric": "risky_merchant",
+      "operator": ">",
+      "threshold": "0.7",
+      "asset": "USDT",
+      "fiat": "UAH",
+      "exchanges": ["bybit"],
+      "channels": ["app"],
+      "enabled": true,
+      "last_triggered_at": "2026-11-10T11:20:00Z",
+      "triggered_today": 1
+    },
+    {
+      "id": "rule-5",
+      "title": "Ціна купівлі USDT < 40.90 ₴",
+      "metric": "price",
+      "operator": "<",
+      "threshold": "40.90",
+      "asset": "USDT",
+      "fiat": "UAH",
+      "exchanges": ["binance"],
+      "channels": ["telegram"],
+      "enabled": false,
+      "last_triggered_at": null,
+      "triggered_today": 0
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "count": 4,
+  "items": [
+    {
+      "name": "LightGBM v12",
+      "status": "active",
+      "mae": "0.041",
+      "trained_at": "2026-11-10T03:00:00Z"
+    },
+    {
+      "name": "LightGBM v11",
+      "status": "archived",
+      "mae": "0.044",
+      "trained_at": "2026-11-09T03:00:00Z"
+    },
+    { "name": "ARIMA", "status": "baseline", "mae": "0.058", "trained_at": null },
+    { "name": "Наївний прогноз", "status": "baseline", "mae": "0.066", "trained_at": null }
+  ]
+}

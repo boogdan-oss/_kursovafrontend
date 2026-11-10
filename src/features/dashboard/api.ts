@@ -1,19 +1,9 @@
 import { apiClient } from '@/shared/api/client'
 import { endpoints } from '@/shared/api/endpoints'
+import type { HealthResponse, PingResponse } from '@/shared/api/types'
 
-export type ComponentStatus = 'ok' | 'error'
-
-export interface HealthResponse {
-  status: 'ok' | 'degraded'
-  version: string
-  time: string
-  components: Record<string, { status: ComponentStatus; detail: string | null }>
-}
-
-export interface PingResponse {
-  message: string
-  time: string
-}
+export type { HealthResponse, PingResponse }
+export type ComponentStatus = HealthResponse['components'][string]['status']
 
 export async function fetchHealth() {
   const { data } = await apiClient.get<HealthResponse>(endpoints.health)
