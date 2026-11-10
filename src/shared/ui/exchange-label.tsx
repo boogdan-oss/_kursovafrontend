@@ -4,6 +4,14 @@ const EXCHANGES: Record<string, { name: string; mark: string; className: string 
   binance: { name: 'Binance', mark: 'B', className: 'bg-[#3A3222] text-[#F0B90B]' },
   bybit: { name: 'Bybit', mark: 'BY', className: 'bg-[#3A2C1E] text-[#F7A600]' },
   okx: { name: 'OKX', mark: 'OK', className: 'bg-muted text-foreground' },
+  bitget: { name: 'Bitget', mark: 'BG', className: 'bg-muted text-foreground' },
+  mexc: { name: 'MEXC', mark: 'MX', className: 'bg-muted text-foreground' },
+  htx: { name: 'HTX', mark: 'HT', className: 'bg-muted text-foreground' },
+}
+
+export function exchangeName(exchange: string) {
+  const code = exchange.toLowerCase()
+  return EXCHANGES[code]?.name ?? exchange.charAt(0).toUpperCase() + exchange.slice(1)
 }
 
 interface ExchangeLabelProps {
@@ -13,7 +21,6 @@ interface ExchangeLabelProps {
 
 export function ExchangeLabel({ exchange, className }: ExchangeLabelProps) {
   const known = EXCHANGES[exchange.toLowerCase()]
-  const name = known?.name ?? exchange.charAt(0).toUpperCase() + exchange.slice(1)
   const mark = known?.mark ?? exchange.slice(0, 2).toUpperCase()
 
   return (
@@ -27,7 +34,7 @@ export function ExchangeLabel({ exchange, className }: ExchangeLabelProps) {
       >
         {mark}
       </span>
-      <span className="text-caption font-semibold">{name}</span>
+      <span className="text-caption font-semibold">{exchangeName(exchange)}</span>
     </span>
   )
 }

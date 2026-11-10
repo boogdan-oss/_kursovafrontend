@@ -71,6 +71,29 @@ export function formatPercent(value: Numeric, options: NumberOptions = {}) {
   return `${formatNumber(number, { minDigits, maxDigits, signed })}%`
 }
 
+export function formatRatio(value: Numeric, options: NumberOptions = {}) {
+  const number = toNumber(value)
+  if (number === null) return EMPTY
+  const { minDigits = 0, maxDigits = Math.max(1, minDigits) } = options
+  return numberFormatter({
+    style: 'percent',
+    minimumFractionDigits: minDigits,
+    maximumFractionDigits: maxDigits,
+  })
+    .formatToParts(number)
+    .filter((part) => part.type !== 'literal')
+    .map((part) => part.value)
+    .join('')
+}
+
+const pluralRules = new Intl.PluralRules(LOCALE)
+
+export function plural(count: number, forms: readonly [one: string, few: string, many: string]) {
+  const rule = pluralRules.select(count)
+  if (rule === 'one') return forms[0]
+  return rule === 'few' ? forms[1] : forms[2]
+}
+
 type DateInput = string | number | Date | null | undefined
 
 function toDate(value: DateInput): Date | null {

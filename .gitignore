@@ -4,3 +4,6 @@
 /node_modules
 # Локальні описи папок: не комітяться
 _folder_info.txt
+.env
+.env.*
+!.env.example

@@ -37,7 +37,7 @@ describe('useFiltersStore', () => {
       FILTERS_STORAGE_KEY,
       JSON.stringify({
         state: { fiat: 'EUR', exchanges: ['okx', 'kraken'], minAiScore: 80 },
-        version: 1,
+        version: 2,
       }),
     )
     await useFiltersStore.persist.rehydrate()
@@ -49,7 +49,22 @@ describe('useFiltersStore', () => {
     })
   })
 
+  it('старий запис із трьома біржами отримує всі шість', async () => {
+    localStorage.setItem(
+      FILTERS_STORAGE_KEY,
+      JSON.stringify({
+        state: { fiat: 'EUR', exchanges: ['binance', 'bybit', 'okx'] },
+        version: 1,
+      }),
+    )
+    await useFiltersStore.persist.rehydrate()
+    expect(state()).toMatchObject({ fiat: 'EUR' })
+    expect(state().exchanges).toHaveLength(6)
+  })
+
   it('перемикає біржі, але останню не знімає', () => {
+    expect(state().exchanges).toHaveLength(6)
+    state().setExchanges(['binance', 'bybit', 'okx'])
     state().toggleExchange('binance')
     expect(state().exchanges).toEqual(['bybit', 'okx'])
     state().toggleExchange('okx')

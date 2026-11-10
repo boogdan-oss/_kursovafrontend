@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 
-export const EXCHANGES = ['binance', 'bybit', 'okx'] as const
+export const EXCHANGES = ['binance', 'bybit', 'okx', 'bitget', 'mexc', 'htx'] as const
 export type ExchangeCode = (typeof EXCHANGES)[number]
 
 export interface Filters {
@@ -78,7 +78,11 @@ export const useFiltersStore = create<FiltersState>()(
     }),
     {
       name: FILTERS_STORAGE_KEY,
-      version: 1,
+      version: 2,
+      migrate: (persisted, version) => {
+        const saved = (persisted ?? {}) as Partial<Filters>
+        return version < 2 ? { ...saved, exchanges: [...EXCHANGES] } : saved
+      },
       storage: createJSONStorage(() => localStorage),
       partialize: ({ asset, fiat, exchanges, bank, amount, minSpread, minAiScore }): Filters => ({
         asset,
