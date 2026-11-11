@@ -25,8 +25,10 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardDescription, CardTitle } from '@/shared/ui/card'
 import { Chip } from '@/shared/ui/chip'
 import { exchangeName } from '@/shared/ui/exchange-label'
+import { LiveBadge } from '@/shared/ui/live-badge'
 import { PageHeader } from '@/shared/ui/page-header'
 import { Pagination } from '@/shared/ui/pagination'
+import { useMarketSocket, useMarketSocketStatus } from '@/shared/ws/useMarketSocket'
 import { selectSingleExchange, useFiltersStore } from '@/store/useFiltersStore'
 
 const PAGE_SIZE = 10
@@ -60,6 +62,9 @@ export function OffersPage() {
   const exchanges = useFiltersStore((state) => state.exchanges)
   const resetFilters = useFiltersStore((state) => state.reset)
   const exchange = selectSingleExchange({ exchanges })
+
+  useMarketSocket(asset, fiat)
+  const liveStatus = useMarketSocketStatus()
 
   const offersQuery = useOffers({
     asset,
@@ -128,17 +133,20 @@ export function OffersPage() {
         title="Сканер P2P-оголошень"
         description={description}
         actions={
-          <Button
-            variant="secondary"
-            onClick={() => {
-              void offersQuery.refetch()
-              void snapshotQuery.refetch()
-            }}
-            disabled={offersQuery.isFetching}
-          >
-            <RefreshCw className={cn(offersQuery.isFetching && 'animate-spin')} />
-            Оновити
-          </Button>
+          <>
+            <LiveBadge status={liveStatus} />
+            <Button
+              variant="secondary"
+              onClick={() => {
+                void offersQuery.refetch()
+                void snapshotQuery.refetch()
+              }}
+              disabled={offersQuery.isFetching}
+            >
+              <RefreshCw className={cn(offersQuery.isFetching && 'animate-spin')} />
+              Оновити
+            </Button>
+          </>
         }
       />
 

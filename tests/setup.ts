@@ -31,3 +31,18 @@ class MemoryStorage implements Storage {
 if (typeof globalThis.localStorage?.setItem !== 'function') {
   vi.stubGlobal('localStorage', new MemoryStorage())
 }
+
+vi.mock('lightweight-charts', () => {
+  const series = { setData: vi.fn() }
+  const chart = {
+    addSeries: vi.fn(() => series),
+    removeSeries: vi.fn(),
+    remove: vi.fn(),
+    timeScale: () => ({ fitContent: vi.fn() }),
+  }
+  return {
+    createChart: vi.fn(() => chart),
+    LineSeries: 'Line',
+    ColorType: { Solid: 'solid' },
+  }
+})

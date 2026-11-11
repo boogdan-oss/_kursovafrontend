@@ -35,8 +35,10 @@ import { useNow } from '@/shared/hooks/useNow'
 import { formatRelativeTime, plural } from '@/shared/lib/format'
 import { Button } from '@/shared/ui/button'
 import { Card, CardDescription, CardTitle } from '@/shared/ui/card'
+import { LiveBadge } from '@/shared/ui/live-badge'
 import { PageHeader } from '@/shared/ui/page-header'
 import { Pagination } from '@/shared/ui/pagination'
+import { useMarketSocket, useMarketSocketStatus } from '@/shared/ws/useMarketSocket'
 import { useFiltersStore } from '@/store/useFiltersStore'
 
 const PAGE_SIZE = 8
@@ -66,6 +68,9 @@ export function ArbitragePage() {
   const setMinSpread = useFiltersStore((state) => state.setMinSpread)
   const setMinAiScore = useFiltersStore((state) => state.setMinAiScore)
   const resetFilters = useFiltersStore((state) => state.reset)
+
+  useMarketSocket(asset, fiat)
+  const liveStatus = useMarketSocketStatus()
 
   const investment = amount ?? undefined
   const pairQuery = useOpportunities({ asset, fiat, investment })
@@ -166,6 +171,7 @@ export function ArbitragePage() {
         description={description}
         actions={
           <>
+            <LiveBadge status={liveStatus} />
             <Button asChild variant="secondary">
               <Link to="/alerts">
                 <BellPlus />

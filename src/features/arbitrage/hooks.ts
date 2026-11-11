@@ -1,11 +1,7 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 
-import {
-  fetchDealQuote,
-  fetchOpportunities,
-  fetchOpportunityHistory,
-  type DealRequest,
-} from '@/features/arbitrage/api'
+import { fetchOpportunities, fetchOpportunityHistory } from '@/features/arbitrage/api'
+import { fetchDealQuote, type DealRequest } from '@/shared/api/queries/calculator'
 import { queryKeys } from '@/shared/api/queryKeys'
 import type {
   OpportunitiesHistoryParams,
