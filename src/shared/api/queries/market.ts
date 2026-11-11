@@ -11,6 +11,7 @@ import type {
 } from '@/shared/api/types'
 
 const MARKETS_STALE_MS = 10 * 60_000
+const PREFERRED_ASSETS = ['USDT', 'BTC', 'ETH', 'USDC', 'BNB', 'SOL']
 export const MARKET_REFRESH_MS = 30_000
 
 export async function fetchMarkets(params: MarketsParams, signal?: AbortSignal) {
@@ -32,6 +33,19 @@ export function useMarkets(params: MarketsParams) {
     queryFn: ({ signal }) => fetchMarkets(params, signal),
     staleTime: MARKETS_STALE_MS,
   })
+}
+
+export function usePairOptions(asset: string, fiat: string) {
+  const fiatMarkets = useMarkets({ fiat })
+  const assetMarkets = useMarkets({ asset })
+
+  const available = fiatMarkets.data?.assets ?? []
+  const assets = [
+    ...new Set([...PREFERRED_ASSETS.filter((code) => available.includes(code)), asset]),
+  ]
+  const fiats = [...new Set([fiat, ...(assetMarkets.data?.fiats ?? [])])].sort()
+
+  return { assets, fiats, markets: fiatMarkets.data?.items ?? [] }
 }
 
 export function useMarketSnapshot(params: SnapshotParams) {

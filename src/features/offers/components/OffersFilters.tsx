@@ -1,8 +1,8 @@
 import { Check, Info } from 'lucide-react'
-import { useEffect, useId, useState } from 'react'
+import { useId } from 'react'
 
 import { MIN_COMPLETION_RATE, MIN_ORDERS_30D, type Side } from '@/features/offers/lib'
-import { useMarkets } from '@/shared/api/queries/market'
+import { usePairOptions } from '@/shared/api/queries/market'
 import { formatRatio } from '@/shared/lib/format'
 import { paymentLabel, sortPayments } from '@/shared/lib/payments'
 import { Button } from '@/shared/ui/button'
@@ -10,58 +10,14 @@ import { Card } from '@/shared/ui/card'
 import { Chip } from '@/shared/ui/chip'
 import { exchangeName } from '@/shared/ui/exchange-label'
 import { Field } from '@/shared/ui/field'
-import { Input } from '@/shared/ui/input'
+import { NumberInput } from '@/shared/ui/number-input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
 import { Tabs, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { EXCHANGES, useFiltersStore } from '@/store/useFiltersStore'
 
-const PREFERRED_ASSETS = ['USDT', 'BTC', 'ETH', 'USDC', 'BNB', 'SOL']
 const ANY_BANK = 'all'
-const AMOUNT_DEBOUNCE_MS = 500
-
-function parseAmount(text: string): number | null {
-  const normalized = text.split(' ').join('').replace(',', '.')
-  if (!normalized) return null
-  const value = Number(normalized)
-  return Number.isFinite(value) && value > 0 ? value : null
-}
-
-function AmountInput({ id, fiat }: { id: string; fiat: string }) {
-  const amount = useFiltersStore((state) => state.amount)
-  const setAmount = useFiltersStore((state) => state.setAmount)
-  const [text, setText] = useState(amount === null ? '' : String(amount))
-
-  if (parseAmount(text) !== amount && document.activeElement?.id !== id) {
-    setText(amount === null ? '' : String(amount))
-  }
-
-  useEffect(() => {
-    const parsed = parseAmount(text)
-    if (parsed === amount) return
-    const timer = setTimeout(() => setAmount(parsed), AMOUNT_DEBOUNCE_MS)
-    return () => clearTimeout(timer)
-  }, [text, amount, setAmount])
-
-  return (
-    <div className="relative">
-      <Input
-        id={id}
-        inputMode="decimal"
-        autoComplete="off"
-        placeholder="будь-яка"
-        value={text}
-        onChange={(event) => setText(event.target.value)}
-        onBlur={() => setAmount(parseAmount(text))}
-        className="pr-12 tabular-nums"
-      />
-      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-small text-muted-foreground">
-        {fiat}
-      </span>
-    </div>
-  )
-}
 
 interface OffersFiltersProps {
   side: Side
@@ -87,29 +43,20 @@ export function OffersFilters({
   const setBank = useFiltersStore((state) => state.setBank)
   const toggleExchange = useFiltersStore((state) => state.toggleExchange)
 
-  const fiatMarkets = useMarkets({ fiat })
-  const assetMarkets = useMarkets({ asset })
+  const amount = useFiltersStore((state) => state.amount)
+  const setAmount = useFiltersStore((state) => state.setAmount)
 
-  const available = fiatMarkets.data?.assets ?? []
-  const assets = [
-    ...PREFERRED_ASSETS.filter((code) => available.includes(code)),
-    ...(PREFERRED_ASSETS.includes(asset) && available.includes(asset) ? [] : [asset]),
-  ]
-  const uniqueAssets = [...new Set(assets)]
-
-  const fiats = [...new Set([fiat, ...(assetMarkets.data?.fiats ?? [])])].sort()
+  const { assets, fiats, markets } = usePairOptions(asset, fiat)
 
   const methods = new Set<string>(bank ? [bank] : [])
-  for (const market of fiatMarkets.data?.items ?? []) {
+  for (const market of markets) {
     if (market.asset !== asset || !(exchanges as string[]).includes(market.exchange)) continue
     for (const method of market.payment_methods) methods.add(method)
   }
   const banks = sortPayments([...methods])
 
   const withPair = new Set(
-    (fiatMarkets.data?.items ?? [])
-      .filter((market) => market.asset === asset)
-      .map((market) => market.exchange),
+    markets.filter((market) => market.asset === asset).map((market) => market.exchange),
   )
 
   return (
@@ -126,7 +73,7 @@ export function OffersFilters({
 
         <Field label="Актив">
           <div className="flex h-10 flex-wrap items-center gap-1.5">
-            {uniqueAssets.map((code) => (
+            {assets.map((code) => (
               <Chip key={code} active={code === asset} onClick={() => setPair(code, fiat)}>
                 {code}
               </Chip>
@@ -156,7 +103,13 @@ export function OffersFilters({
         </Field>
 
         <Field label="Сума" htmlFor={`${id}-amount`} className="w-[160px]">
-          <AmountInput id={`${id}-amount`} fiat={fiat} />
+          <NumberInput
+            id={`${id}-amount`}
+            value={amount}
+            onValueChange={setAmount}
+            suffix={fiat}
+            placeholder="будь-яка"
+          />
         </Field>
 
         <Field label="Банк" htmlFor={`${id}-bank`} className="min-w-[200px] flex-1">

@@ -1,4 +1,5 @@
 import type {
+  CalculatorRequest,
   HistoryParams,
   MarketsParams,
   OffersParams,
@@ -29,6 +30,12 @@ export const queryKeys = {
       [...queryKeys.opportunities.all, 'list', params] as const,
     history: (params: OpportunitiesHistoryParams = {}) =>
       [...queryKeys.opportunities.all, 'history', params] as const,
+  },
+
+  calculator: {
+    all: ['calculator'] as const,
+    quote: (request: Partial<CalculatorRequest>) =>
+      [...queryKeys.calculator.all, 'quote', request] as const,
   },
 
   forecast: {
