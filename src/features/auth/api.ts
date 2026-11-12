@@ -20,3 +20,8 @@ export async function fetchMe(signal?: AbortSignal) {
   const { data } = await apiClient.get<User>(endpoints.me, { signal })
   return data
 }
+
+export async function googleLogin(code: string) {
+  const { data } = await apiClient.post<AuthResponse>(endpoints.authGoogle, { code })
+  return data
+}

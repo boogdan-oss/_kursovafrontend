@@ -2,8 +2,8 @@ import { useId, useState, type FormEvent } from 'react'
 import { Navigate } from 'react-router-dom'
 
 import { AuthCard } from '@/features/auth/components/AuthCard'
-import { AuthField, Checkbox, FormError } from '@/features/auth/components/AuthForm'
-import { useAuthRedirectTarget, useLogin } from '@/features/auth/hooks'
+import { AuthField, Checkbox, FormError, GoogleButton } from '@/features/auth/components/AuthForm'
+import { useAuthRedirectTarget, useGoogleLogin, useLogin } from '@/features/auth/hooks'
 import { toApiError } from '@/shared/api/client'
 import { Button } from '@/shared/ui/button'
 import { useAuthStore } from '@/store/useAuthStore'
@@ -15,6 +15,7 @@ export function LoginPage() {
   const [remember, setRemember] = useState(true)
   const [submitted, setSubmitted] = useState(false)
   const mutation = useLogin()
+  const google = useGoogleLogin()
   const session = useAuthStore((state) => state.session)
   const target = useAuthRedirectTarget()
 
@@ -61,6 +62,15 @@ export function LoginPage() {
           {mutation.isPending ? 'Вхід…' : 'Увійти'}
         </Button>
       </form>
+      <div className="mt-5">
+        <GoogleButton
+          configured={google.configured}
+          ready={google.ready}
+          pending={google.pending}
+          error={google.error}
+          onClick={() => google.start(remember)}
+        />
+      </div>
     </AuthCard>
   )
 }

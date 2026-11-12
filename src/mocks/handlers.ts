@@ -1,17 +1,18 @@
 import { bypass, delay, http, HttpResponse } from 'msw'
 
+import type { ChatRequest } from '@/shared/api/assistant-types'
 import { endpoints } from '@/shared/api/endpoints'
 import type { ForecastHorizon, ForecastSide } from '@/shared/api/forecast-types'
 import type { HistoryResponse } from '@/shared/api/types'
 
 import alertRulesJson from './fixtures/alert-rules.json'
 import communityPostsJson from './fixtures/community-posts.json'
-import conversationsJson from './fixtures/conversations.json'
 import forecastModelsJson from './fixtures/forecast-models.json'
 import notificationsJson from './fixtures/notifications.json'
 import watchlistJson from './fixtures/watchlist.json'
 import { MIN_POINTS, trendForecast, type PricePoint } from './forecast-model'
-import type { AlertRule, AlertRuleInput, ChatRequest, ChatResponse } from './types'
+import { chat, getConversation, listConversations } from './assistant'
+import type { AlertRule, AlertRuleInput } from './types'
 
 const url = (path: string) => `*/api/v1${path}`
 
@@ -122,25 +123,21 @@ export const handlers = [
 
   http.get(url(endpoints.assistantConversations), async () => {
     await delay(LATENCY_MS)
-    return HttpResponse.json(conversationsJson)
+    return HttpResponse.json(listConversations())
+  }),
+
+  http.get(url(endpoints.assistantConversation(':id')), async ({ params }) => {
+    await delay(LATENCY_MS)
+    const conversation = getConversation(String(params.id))
+    return conversation ? HttpResponse.json(conversation) : detail('Розмову не знайдено', 404)
   }),
 
   http.post(url(endpoints.assistantChat), async ({ request }) => {
     await delay(900)
-    const { conversation_id, message } = (await request.json()) as ChatRequest
-    if (!message?.trim()) return detail('Порожнє повідомлення', 422)
-    const response: ChatResponse = {
-      conversation_id: conversation_id ?? 'c-new',
-      message: {
-        role: 'assistant',
-        content:
-          'Це відповідь-заглушка: AI-асистент ще не підключений до бекенду. ' +
-          `Ваш запит: «${message.trim()}».`,
-        tool_calls: ['get_best_prices'],
-        created_at: new Date().toISOString(),
-      },
-    }
-    return HttpResponse.json(response)
+    const body = (await request.json()) as ChatRequest
+    if (!body.message?.trim()) return detail('Порожнє повідомлення', 422)
+    const response = chat(body)
+    return response ? HttpResponse.json(response) : detail('Розмову не знайдено', 404)
   }),
 
   http.get(url(endpoints.communityPosts), async () => {

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import axios, { AxiosError, type AxiosAdapter, type InternalAxiosRequestConfig } from 'axios'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
@@ -259,5 +259,81 @@ describe('токени в API-клієнті', () => {
     await expect(apiClient.get('/me')).rejects.toMatchObject({ status: 401 })
     expect(useAuthStore.getState().session).toBeNull()
     expect(localStorage.getItem(STORAGE_KEY)).toBeNull()
+  })
+})
+
+describe('вхід через Google', () => {
+  type CodeConfig = {
+    client_id: string
+    callback: (response: { code?: string; error?: string }) => void
+    error_callback?: (error: { type: string }) => void
+  }
+
+  function mockGoogle(respond: (config: CodeConfig) => void) {
+    const initCodeClient = vi.fn((config: CodeConfig) => ({
+      requestCode: () => respond(config),
+    }))
+    window.google = { accounts: { oauth2: { initCodeClient } } } as unknown as Window['google']
+    return initCodeClient
+  }
+
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    delete window.google
+  })
+
+  it('без Client ID кнопка неактивна', () => {
+    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', '')
+    renderAuth('/login')
+    expect(screen.getByRole('button', { name: /Продовжити з Google/ })).toBeDisabled()
+    expect(screen.getByText('Вхід через Google ще не налаштовано')).toBeInTheDocument()
+  })
+
+  it('код від Google обмінюється на сесію', async () => {
+    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'client-123')
+    const init = mockGoogle((config) => config.callback({ code: 'google-code' }))
+    const post = vi.spyOn(apiClient, 'post').mockResolvedValue({ data: authResponse('g-access') })
+    renderAuth('/register', { from: '/arbitrage' })
+
+    const button = await screen.findByRole('button', { name: /Продовжити з Google/ })
+    await waitFor(() => expect(button).toBeEnabled())
+    await userEvent.click(button)
+
+    expect(await screen.findByText('Сторінка арбітражу')).toBeInTheDocument()
+    expect(init).toHaveBeenCalledWith(
+      expect.objectContaining({ client_id: 'client-123', ux_mode: 'popup' }),
+    )
+    expect(post).toHaveBeenCalledWith('/auth/google', { code: 'google-code' })
+    expect(useAuthStore.getState().session?.accessToken).toBe('g-access')
+  })
+
+  it('закрите вікно Google не показує помилку', async () => {
+    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'client-123')
+    mockGoogle((config) => config.error_callback?.({ type: 'popup_closed' }))
+    const post = vi.spyOn(apiClient, 'post')
+    renderAuth('/login')
+
+    const button = screen.getByRole('button', { name: /Продовжити з Google/ })
+    await waitFor(() => expect(button).toBeEnabled())
+    await userEvent.click(button)
+
+    await waitFor(() => expect(button).toBeEnabled())
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(post).not.toHaveBeenCalled()
+  })
+
+  it('помилка сервера після Google видна користувачу', async () => {
+    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'client-123')
+    mockGoogle((config) => config.callback({ code: 'google-code' }))
+    vi.spyOn(apiClient, 'post').mockRejectedValue(
+      new ApiError('Вхід через Google не налаштовано на сервері', { status: 503 }),
+    )
+    renderAuth('/login')
+
+    const button = screen.getByRole('button', { name: /Продовжити з Google/ })
+    await waitFor(() => expect(button).toBeEnabled())
+    await userEvent.click(button)
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('не налаштовано на сервері')
   })
 })

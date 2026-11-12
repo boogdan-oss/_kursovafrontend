@@ -55,32 +55,6 @@ export interface WatchlistResponse {
   items: WatchlistItem[]
 }
 
-export interface Conversation {
-  id: string
-  title: string
-  updated_at: string
-}
-
-export interface ConversationsResponse {
-  count: number
-  items: Conversation[]
-}
-
-export interface ChatRequest {
-  conversation_id?: string | null
-  message: string
-}
-
-export interface ChatResponse {
-  conversation_id: string
-  message: {
-    role: 'assistant'
-    content: string
-    tool_calls: string[]
-    created_at: string
-  }
-}
-
 export interface CommunityPost {
   id: string
   author: { nickname: string; name: string }

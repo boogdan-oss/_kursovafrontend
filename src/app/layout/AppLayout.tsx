@@ -4,7 +4,7 @@ import { Footer } from '@/app/layout/Footer'
 import { Header } from '@/app/layout/Header'
 import { cn } from '@/shared/lib/utils'
 
-const TERMINAL_ROUTES = ['/arbitrage', '/offers']
+const TERMINAL_ROUTES = ['/arbitrage', '/offers', '/assistant']
 
 export function AppLayout() {
   const { pathname } = useLocation()
