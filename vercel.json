@@ -4,7 +4,7 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "rewrites": [
-    { "source": "/api/:path*", "destination": "http://92.5.147.143:8000/api/:path*" },
+    { "source": "/api/:path*", "destination": "https://upars.duckdns.org/api/:path*" },
     { "source": "/((?!api/|ws/|docs|openapi\\.json).*)", "destination": "/index.html" }
   ]
 }
