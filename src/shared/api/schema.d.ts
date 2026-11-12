@@ -72,6 +72,8 @@ export interface paths {
          *     Перший елемент біржі — усі способи оплати (payment_method = null), далі — кожен окремо.
          *
          *     amount відкидає оголошення, у ліміти яких сума не вкладається: без нього у ціну входять і великі лоти, недоступні для звичайної угоди.
+         *
+         *     cached = true — знімок із Redis: після нього collector нових оголошень не приносив, тож ціни ті самі. Новий збір будь-якої біржі скидає кеш.
          */
         get: operations["market_snapshot_api_v1_market_snapshot_get"];
         put?: never;
@@ -758,6 +760,8 @@ export interface components {
             freshness: components["schemas"]["Freshness"][];
             /** Queued */
             queued: boolean;
+            /** Cached */
+            cached: boolean;
             /** Items */
             items: components["schemas"]["MarketSnapshot"][];
         };

@@ -155,7 +155,7 @@ describe('MarketSocket', () => {
 
 describe('запис подій у кеш', () => {
   function response(items: MarketSnapshot[]): SnapshotResponse {
-    return { asset: 'USDT', fiat: 'UAH', freshness: [], queued: false, items }
+    return { asset: 'USDT', fiat: 'UAH', freshness: [], queued: false, cached: false, items }
   }
 
   it('знімок замінює рядки своєї біржі лише в запитах без суми', () => {
