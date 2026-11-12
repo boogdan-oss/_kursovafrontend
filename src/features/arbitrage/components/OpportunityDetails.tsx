@@ -1,50 +1,57 @@
-import { Info } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 
 import { ChainDetails } from '@/features/arbitrage/components/ChainDetails'
-import { useDealQuote } from '@/features/arbitrage/hooks'
+import { SpreadSparkline } from '@/features/arbitrage/components/SpreadSparkline'
+import { useDealQuote, useRouteSpread } from '@/features/arbitrage/hooks'
 import { KIND_DESCRIPTIONS } from '@/features/arbitrage/lib'
 import type { OpportunityItem } from '@/shared/api/types'
-import {
-  formatCrypto,
-  formatDuration,
-  formatFiat,
-  formatNumber,
-  formatPercent,
-} from '@/shared/lib/format'
+import { formatClock, formatCrypto, formatNumber, formatPercent } from '@/shared/lib/format'
+import { paymentLabel } from '@/shared/lib/payments'
 import { cn } from '@/shared/lib/utils'
-import { SCORE_TEXT, ScoreBar, scoreTone } from '@/shared/ui/ai-score'
-import { Badge } from '@/shared/ui/badge'
+import { SCORE_TEXT, scoreTone } from '@/shared/ui/ai-score'
 import { Button } from '@/shared/ui/button'
-import { Card } from '@/shared/ui/card'
 import { exchangeName } from '@/shared/ui/exchange-label'
+import { Panel, SectionLabel } from '@/shared/ui/panel'
 import { Skeleton } from '@/shared/ui/skeleton'
+import { Tag } from '@/shared/ui/tag'
 
-const SCORE_FACTORS =
-  'Оцінка за чистим спредом, ліквідністю, RR, стабільністю, обсягом і волатильністю'
 const CHAIN_NOTE = 'Для такої угоди потрібні рахунки в усіх валютах ланцюжка.'
 
 function Row({
   label,
   children,
-  strong,
+  highlight,
 }: {
   label: string
   children: ReactNode
-  strong?: boolean
+  highlight?: boolean
 }) {
   return (
-    <div className="flex items-center justify-between gap-3">
-      <span className="text-caption text-muted-foreground">{label}</span>
+    <div
+      className={cn(
+        'flex min-h-7 items-center justify-between gap-3 border-b px-3 py-1',
+        highlight && 'bg-success/10',
+      )}
+    >
+      <span className={cn('text-ui', highlight ? 'font-semibold' : 'text-muted-foreground')}>
+        {label}
+      </span>
       <span
-        className={cn(
-          'whitespace-nowrap tabular-nums',
-          strong ? 'text-body font-semibold text-success' : 'text-caption',
-        )}
+        className={cn('whitespace-nowrap font-mono text-ui', highlight && 'font-bold text-success')}
       >
         {children}
       </span>
+    </div>
+  )
+}
+
+function Kpi({ label, children, note }: { label: string; children: ReactNode; note: string }) {
+  return (
+    <div className="flex flex-1 flex-col gap-0.5 px-3.5 py-2.5 first:border-r">
+      <span className="text-label uppercase text-tertiary">{label}</span>
+      {children}
+      <span className="text-meta text-muted-foreground">{note}</span>
     </div>
   )
 }
@@ -60,8 +67,16 @@ function calculatorUrl(opportunity: OpportunityItem) {
   return `/calculator?${params.toString()}`
 }
 
+function payments(opportunity: OpportunityItem) {
+  const methods = opportunity.steps.flatMap((step) =>
+    step.action !== 'TRANSFER' && step.payment_method ? [paymentLabel(step.payment_method)] : [],
+  )
+  return methods.length ? ` · ${methods.join(' → ')}` : ''
+}
+
 interface OpportunityDetailsProps {
   opportunity: OpportunityItem
+  rank: number
   activeSince: number | undefined
   now: number
   className?: string
@@ -69,116 +84,127 @@ interface OpportunityDetailsProps {
 
 export function OpportunityDetails({
   opportunity,
+  rank,
   activeSince,
   now,
   className,
 }: OpportunityDetailsProps) {
   const quote = useDealQuote(opportunity)
+  const spread = useRouteSpread(opportunity)
   const { asset, fiat, ai_score: score } = opportunity
   const chain = opportunity.kind === 'chain'
   const deal = chain ? undefined : quote.data?.deal
   const pending = !chain && quote.isPending && opportunity.investment != null
   const tone = score == null ? null : scoreTone(score)
   const withdrawal = deal ? Number(deal.quantity) - Number(deal.sell_quantity) : 0
+  const slippage = quote.data?.buy_slippage_pct
+  const rr = quote.data?.rr ?? opportunity.rr
 
+  const money = (value: string | number | null | undefined, signed = false) =>
+    value == null ? '—' : `${formatNumber(value, { minDigits: 2, maxDigits: 2, signed })} ${fiat}`
   const fromQuote = (value: string | undefined) =>
-    pending ? <Skeleton className="h-4 w-20" /> : formatFiat(value, fiat)
+    pending ? <Skeleton className="h-3.5 w-20" /> : money(value)
 
   return (
-    <Card
-      className={cn('flex flex-col gap-4 border-primary/60 p-5', className)}
+    <Panel
+      className={cn('flex flex-col border-border-strong', className)}
       aria-label="Деталі можливості"
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex flex-col gap-0.5">
-          <h2 className="text-h3">
+      <div className="flex flex-col gap-1 border-b px-3 py-2.5">
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-ui-lg text-tertiary">
+            #{String(rank).padStart(2, '0')}
+          </span>
+          <h2 className="text-[14px] font-bold leading-[18px]">
             {exchangeName(opportunity.buy_exchange)} → {exchangeName(opportunity.sell_exchange)}
           </h2>
-          <span className="text-small text-muted-foreground">
-            {asset}/{fiat} · {KIND_DESCRIPTIONS[opportunity.kind]}
-          </span>
+          <Tag tone="success" className="ml-auto">
+            {activeSince === undefined
+              ? 'Активна'
+              : `Активна ${formatClock((now - activeSince) / 1000)}`}
+          </Tag>
         </div>
-        <Badge variant="success">
-          {activeSince === undefined
-            ? 'Активна'
-            : `Активна ${formatDuration((now - activeSince) / 1000)}`}
-        </Badge>
+        <span className="text-meta text-muted-foreground">
+          {asset}/{fiat} · {KIND_DESCRIPTIONS[opportunity.kind]}
+          {payments(opportunity)}
+        </span>
       </div>
 
-      <div className="flex items-center gap-4 rounded-xl bg-background p-4">
-        <div className="flex flex-col">
-          <span className="text-small text-muted-foreground">AI Score</span>
-          <span className="flex items-baseline gap-1">
-            <span className={cn('text-num-lg tabular-nums', tone && SCORE_TEXT[tone])}>
-              {score ?? '—'}
-            </span>
-            <span className="text-caption text-muted-foreground">/100</span>
+      <div className="flex border-b">
+        <Kpi label="AI Score" note={opportunity.ai_category ?? 'оцінка ще не готова'}>
+          <span className="flex items-baseline gap-0.5 font-mono">
+            <span className={cn('text-kpi-lg', tone && SCORE_TEXT[tone])}>{score ?? '—'}</span>
+            <span className="text-ui font-semibold text-tertiary">/100</span>
           </span>
-        </div>
-        <div className="flex min-w-0 flex-1 flex-col items-start gap-2">
-          {opportunity.ai_category && tone && (
-            <Badge variant={tone}>{opportunity.ai_category}</Badge>
-          )}
-          {score != null && <ScoreBar score={score} className="w-full" />}
-          <span className="text-small text-muted-foreground">{SCORE_FACTORS}</span>
-        </div>
+        </Kpi>
+        <Kpi
+          label="Чистий прибуток"
+          note={`${fiat} · ROI ${formatPercent(deal?.roi_pct ?? opportunity.net_spread_pct)}`}
+        >
+          <span className="font-mono text-kpi-lg text-success">
+            {formatNumber(opportunity.estimated_profit, {
+              minDigits: 2,
+              maxDigits: 2,
+              signed: true,
+            })}
+          </span>
+        </Kpi>
       </div>
 
-      <span className="text-body font-semibold">Кроки угоди</span>
+      <SectionLabel className="px-3 pb-2 pt-2.5">Кроки угоди</SectionLabel>
       <ChainDetails opportunity={opportunity} deal={deal} />
-      {chain && <p className="text-small text-warning">{CHAIN_NOTE}</p>}
+      {chain && <p className="border-b px-3 py-2 text-meta text-warning">{CHAIN_NOTE}</p>}
 
-      <hr className="border-border" />
+      <SectionLabel className="px-3 pb-2 pt-2.5">Розрахунок</SectionLabel>
+      <Row label="Інвестиція">{money(opportunity.investment)}</Row>
+      {chain ? (
+        <>
+          <Row label="Спред до комісій">{formatPercent(opportunity.spread_pct)}</Row>
+          <Row label="Net % після комісій">{formatPercent(opportunity.net_spread_pct)}</Row>
+        </>
+      ) : (
+        <>
+          <Row label="Комісії разом">{fromQuote(deal?.fees)}</Row>
+          {withdrawal > 0 && deal && (
+            <Row label={`Вивід ${formatCrypto(withdrawal, asset, { minDigits: 0 })}`}>
+              <span className="text-destructive">
+                {money(-withdrawal * Number(deal.sell_price))}
+              </span>
+            </Row>
+          )}
+          <Row label="Сума продажу">{fromQuote(deal?.sell_amount)}</Row>
+          <Row label="Slippage · RR">
+            {slippage == null ? '—' : formatPercent(slippage)} ·{' '}
+            {rr == null ? '—' : `${formatNumber(rr, { minDigits: 1, maxDigits: 2 })} : 1`}
+          </Row>
+        </>
+      )}
+      <Row label="Чистий прибуток" highlight>
+        {money(opportunity.estimated_profit, true)}
+      </Row>
 
-      <div className="flex flex-col gap-2.5">
-        <Row label="Сума інвестиції">{formatFiat(opportunity.investment, fiat)}</Row>
-        {chain ? (
-          <>
-            <Row label="Спред до комісій">{formatPercent(opportunity.spread_pct)}</Row>
-            <Row label="Net % після комісій">{formatPercent(opportunity.net_spread_pct)}</Row>
-          </>
-        ) : (
-          <>
-            <Row label="Сума продажу">{fromQuote(deal?.sell_amount)}</Row>
-            <Row label="Комісії разом">{fromQuote(deal?.fees)}</Row>
-            {withdrawal > 0 && deal && (
-              <Row label={`у т. ч. вивід (${formatCrypto(withdrawal, asset, { minDigits: 0 })})`}>
-                ≈ {formatFiat(withdrawal * Number(deal.sell_price), fiat)}
-              </Row>
-            )}
-          </>
-        )}
-      </div>
+      {!chain && (
+        <div className="flex flex-col gap-2 px-3 py-2.5">
+          <SectionLabel>Валовий спред маршруту · 60 хв</SectionLabel>
+          <SpreadSparkline points={spread.points} isLoading={spread.isPending} />
+        </div>
+      )}
 
-      <hr className="border-border" />
-
-      <div className="flex flex-col gap-2.5">
-        <Row label="Чистий прибуток" strong>
-          {formatFiat(opportunity.estimated_profit, fiat, { signed: true })}
-        </Row>
-        <Row label="ROI">
-          <span className="font-semibold">
-            {formatPercent(deal?.roi_pct ?? opportunity.net_spread_pct)}
-          </span>
-        </Row>
-        <Row label="Risk / Reward">{formatNumber(opportunity.rr, { minDigits: 2 })}</Row>
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        {!chain && (
-          <Button asChild className="flex-1">
-            <Link to={calculatorUrl(opportunity)}>Відкрити в калькуляторі</Link>
+      <div className="mt-auto flex flex-col gap-2.5 border-t px-3 py-2.5">
+        <div className="flex gap-1.5">
+          {!chain && (
+            <Button asChild size="terminal" className="flex-1">
+              <Link to={calculatorUrl(opportunity)}>Відкрити в калькуляторі</Link>
+            </Button>
+          )}
+          <Button asChild variant="secondary" size="terminal" className="flex-1">
+            <Link to="/alerts">Створити сповіщення</Link>
           </Button>
-        )}
-        <Button asChild variant="secondary" className={cn(chain && 'flex-1')}>
-          <Link to="/alerts">Сповістити</Link>
-        </Button>
+        </div>
+        <p className="text-meta text-tertiary">
+          Аналітика, не фінансова порада. UPars не виконує угод від вашого імені.
+        </p>
       </div>
-
-      <p className="flex items-start gap-2 text-small text-muted-foreground">
-        <Info className="mt-px size-3.5 shrink-0" aria-hidden />
-        CryptoParser не виконує угод — лише аналітика для ваших рішень.
-      </p>
-    </Card>
+    </Panel>
   )
 }

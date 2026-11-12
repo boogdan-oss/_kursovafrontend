@@ -6,16 +6,16 @@ import {
   type KindFilter,
   type Thresholds,
 } from '@/features/arbitrage/lib'
-import { usePairOptions } from '@/shared/api/queries/market'
 import { Button } from '@/shared/ui/button'
-import { Card } from '@/shared/ui/card'
-import { Chip } from '@/shared/ui/chip'
-import { Field } from '@/shared/ui/field'
+import { CheckChip } from '@/shared/ui/check-chip'
+import { exchangeName } from '@/shared/ui/exchange-label'
 import { NumberInput } from '@/shared/ui/number-input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { FieldLabel, Panel, SectionLabel } from '@/shared/ui/panel'
+import { Segmented } from '@/shared/ui/segmented'
 import { Switch } from '@/shared/ui/switch'
-import { Tabs, TabsList, TabsTrigger } from '@/shared/ui/tabs'
-import { useFiltersStore } from '@/store/useFiltersStore'
+import { EXCHANGES, useFiltersStore } from '@/store/useFiltersStore'
+
+const INPUT = 'h-7 rounded-sm border-border-strong bg-elevated px-2.5 font-mono text-ui'
 
 interface ArbitrageFiltersProps {
   kind: KindFilter
@@ -42,119 +42,99 @@ export function ArbitrageFilters({
   const asset = useFiltersStore((state) => state.asset)
   const fiat = useFiltersStore((state) => state.fiat)
   const amount = useFiltersStore((state) => state.amount)
-  const setPair = useFiltersStore((state) => state.setPair)
-  const setBank = useFiltersStore((state) => state.setBank)
+  const exchanges = useFiltersStore((state) => state.exchanges)
   const setAmount = useFiltersStore((state) => state.setAmount)
   const setMinSpread = useFiltersStore((state) => state.setMinSpread)
   const setMinAiScore = useFiltersStore((state) => state.setMinAiScore)
+  const toggleExchange = useFiltersStore((state) => state.toggleExchange)
 
-  const { assets, fiats } = usePairOptions(asset, fiat)
-
-  function tabLabel(value: KindFilter) {
-    const count = chainsLoading && value === 'chain' ? '…' : counts[value]
-    return `${KIND_TAB_LABELS[value]} · ${count}`
-  }
+  const kindOptions = KIND_FILTERS.map((value) => ({
+    value,
+    label: `${KIND_TAB_LABELS[value]} · ${chainsLoading && value === 'chain' ? '…' : counts[value]}`,
+  }))
 
   return (
-    <Card className="flex flex-col gap-4 p-5">
-      <div className="flex flex-wrap items-end gap-4">
-        <Field label="Тип">
-          <Tabs value={kind} onValueChange={(value) => onKindChange(value as KindFilter)}>
-            <TabsList className="h-auto min-h-10 flex-wrap justify-start">
-              {KIND_FILTERS.map((value) => (
-                <TabsTrigger key={value} value={value} className="h-8">
-                  {tabLabel(value)}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
-        </Field>
-
-        <Field label="Мін. Net %" htmlFor={`${id}-net`} className="w-[120px]">
-          <NumberInput
-            id={`${id}-net`}
-            value={thresholds.minNet || null}
-            onValueChange={(value) => setMinSpread(value ?? 0)}
-            suffix="%"
-            placeholder="0"
-          />
-        </Field>
-
-        <Field label="Мін. AI Score" htmlFor={`${id}-score`} className="w-[120px]">
-          <NumberInput
-            id={`${id}-score`}
-            value={thresholds.minAiScore || null}
-            onValueChange={(value) => setMinAiScore(value ?? 0)}
-            max={100}
-            integer
-            placeholder="0"
-          />
-        </Field>
-
-        <Field label="Мін. обсяг" htmlFor={`${id}-volume`} className="w-[140px]">
-          <NumberInput
-            id={`${id}-volume`}
-            value={thresholds.minVolume}
-            onValueChange={onMinVolumeChange}
-            suffix={asset}
-            placeholder="будь-який"
-          />
-        </Field>
-
-        <Field label="Сума угоди" htmlFor={`${id}-amount`} className="w-[150px]">
-          <NumberInput
-            id={`${id}-amount`}
-            value={amount}
-            onValueChange={setAmount}
-            suffix={fiat}
-            placeholder="типова"
-          />
-        </Field>
-
-        <div className="ml-auto flex h-10 items-center gap-2">
-          <Switch
-            id={`${id}-liquid`}
-            checked={thresholds.liquidOnly}
-            onCheckedChange={onLiquidOnlyChange}
-          />
-          <label htmlFor={`${id}-liquid`} className="cursor-pointer text-caption">
-            Тільки ліквідні
-          </label>
-        </div>
+    <Panel className="flex flex-wrap items-end gap-x-3.5 gap-y-3 px-3 py-3">
+      <div className="flex flex-col gap-1.5">
+        <SectionLabel>Тип</SectionLabel>
+        <Segmented value={kind} onValueChange={onKindChange} options={kindOptions} label="Тип" />
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
-        <span className="text-caption text-muted-foreground">Пара:</span>
-        <div className="flex flex-wrap gap-1.5">
-          {assets.map((code) => (
-            <Chip key={code} active={code === asset} onClick={() => setPair(code, fiat)}>
-              {code}
-            </Chip>
+      <div className="flex w-[86px] flex-col gap-1.5">
+        <FieldLabel htmlFor={`${id}-net`}>Мін. Net, %</FieldLabel>
+        <NumberInput
+          id={`${id}-net`}
+          value={thresholds.minNet || null}
+          onValueChange={(value) => setMinSpread(value ?? 0)}
+          placeholder="0"
+          className={INPUT}
+        />
+      </div>
+
+      <div className="flex w-[86px] flex-col gap-1.5">
+        <FieldLabel htmlFor={`${id}-score`}>Мін. AI Score</FieldLabel>
+        <NumberInput
+          id={`${id}-score`}
+          value={thresholds.minAiScore || null}
+          onValueChange={(value) => setMinAiScore(value ?? 0)}
+          max={100}
+          integer
+          placeholder="0"
+          className={INPUT}
+        />
+      </div>
+
+      <div className="flex w-[110px] flex-col gap-1.5">
+        <FieldLabel htmlFor={`${id}-volume`}>Мін. обсяг, {asset}</FieldLabel>
+        <NumberInput
+          id={`${id}-volume`}
+          value={thresholds.minVolume}
+          onValueChange={onMinVolumeChange}
+          placeholder="будь-який"
+          className={INPUT}
+        />
+      </div>
+
+      <div className="flex w-[100px] flex-col gap-1.5">
+        <FieldLabel htmlFor={`${id}-amount`}>Сума, {fiat}</FieldLabel>
+        <NumberInput
+          id={`${id}-amount`}
+          value={amount}
+          onValueChange={setAmount}
+          placeholder="типова"
+          className={INPUT}
+        />
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <SectionLabel>Біржі</SectionLabel>
+        <div className="flex flex-wrap gap-1">
+          {EXCHANGES.map((code) => (
+            <CheckChip
+              key={code}
+              checked={exchanges.includes(code)}
+              onClick={() => toggleExchange(code)}
+            >
+              {exchangeName(code)}
+            </CheckChip>
           ))}
         </div>
-        <Select
-          value={fiat}
-          onValueChange={(value) => {
-            setPair(asset, value)
-            setBank(null)
-          }}
-        >
-          <SelectTrigger className="h-8 w-[100px]" aria-label="Фіат">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {fiats.map((code) => (
-              <SelectItem key={code} value={code}>
-                {code}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Button variant="ghost" className="ml-auto" onClick={onReset}>
-          Скинути фільтри
-        </Button>
       </div>
-    </Card>
+
+      <div className="flex h-7 items-center gap-2">
+        <Switch
+          id={`${id}-liquid`}
+          checked={thresholds.liquidOnly}
+          onCheckedChange={onLiquidOnlyChange}
+        />
+        <label htmlFor={`${id}-liquid`} className="cursor-pointer text-ui text-muted-foreground">
+          Тільки ліквідні
+        </label>
+      </div>
+
+      <Button variant="secondary" size="terminal" className="ml-auto" onClick={onReset}>
+        Скинути
+      </Button>
+    </Panel>
   )
 }

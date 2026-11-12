@@ -1,7 +1,9 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQueries, useQuery } from '@tanstack/react-query'
 
 import { fetchOpportunities, fetchOpportunityHistory } from '@/features/arbitrage/api'
+import { spreadSeries } from '@/features/arbitrage/lib'
 import { fetchDealQuote, type DealRequest } from '@/shared/api/queries/calculator'
+import { fetchMarketHistory } from '@/shared/api/queries/market'
 import { queryKeys } from '@/shared/api/queryKeys'
 import type {
   OpportunitiesHistoryParams,
@@ -70,5 +72,52 @@ export function useDealQuote(opportunity: OpportunityItem | undefined) {
     queryFn: ({ signal }) => fetchDealQuote(request!, signal),
     enabled: request !== null,
     meta: { silent: true },
+  })
+}
+
+const SPREAD_WINDOW_MS = 60 * 60_000
+const SPREAD_REFRESH_MS = 60_000
+
+export function useRouteSpread(opportunity: OpportunityItem | undefined) {
+  const enabled = opportunity !== undefined && opportunity.kind !== 'chain'
+  const exchanges = enabled
+    ? [...new Set([opportunity.buy_exchange, opportunity.sell_exchange])]
+    : []
+  const asset = opportunity?.asset ?? ''
+  const fiat = opportunity?.fiat ?? ''
+
+  return useQueries({
+    queries: exchanges.map((exchange) => ({
+      queryKey: [
+        ...queryKeys.markets.history({ asset, fiat, exchange, interval: '1m' }),
+        'route-spread',
+      ],
+      queryFn: ({ signal }: { signal: AbortSignal }) =>
+        fetchMarketHistory(
+          {
+            asset,
+            fiat,
+            exchange,
+            interval: '1m',
+            from: new Date(Date.now() - SPREAD_WINDOW_MS).toISOString(),
+          },
+          signal,
+        ),
+      refetchInterval: SPREAD_REFRESH_MS,
+      meta: { silent: true },
+    })),
+    combine: (results) => {
+      const byExchange = new Map(
+        results.flatMap((result) =>
+          result.data ? [[result.data.exchange, result.data.items]] : [],
+        ),
+      )
+      const buy = opportunity && byExchange.get(opportunity.buy_exchange)
+      const sell = opportunity && byExchange.get(opportunity.sell_exchange)
+      return {
+        points: buy && sell ? spreadSeries(buy, sell) : [],
+        isPending: results.some((result) => result.isPending),
+      }
+    },
   })
 }

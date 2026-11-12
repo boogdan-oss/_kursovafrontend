@@ -1,3 +1,4 @@
+import type { ForecastParams } from '@/shared/api/forecast-types'
 import type {
   CalculatorRequest,
   HistoryParams,
@@ -40,8 +41,7 @@ export const queryKeys = {
 
   forecast: {
     all: ['forecast'] as const,
-    detail: (params: { asset: string; fiat: string; exchange: string; horizon: number }) =>
-      [...queryKeys.forecast.all, 'detail', params] as const,
+    detail: (params: ForecastParams) => [...queryKeys.forecast.all, 'detail', params] as const,
     models: () => [...queryKeys.forecast.all, 'models'] as const,
   },
 

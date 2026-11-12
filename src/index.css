@@ -6,37 +6,38 @@
   :root {
     color-scheme: dark;
 
-    --background: 30 30 30;
+    --background: 22 22 22;
     --foreground: 220 221 222;
-    --card: 38 38 38;
+    --tertiary: 94 94 94;
+    --card: 30 30 30;
     --card-foreground: 220 221 222;
-    --elevated: 46 46 46;
-    --popover: 46 46 46;
+    --elevated: 38 38 38;
+    --popover: 38 38 38;
     --popover-foreground: 220 221 222;
 
     --primary: 139 108 239;
-    --primary-soft: 46 40 64;
-    --primary-foreground: 220 221 222;
-    --action: 228 228 228;
-    --action-foreground: 30 30 30;
+    --primary-soft: 45 41 59;
+    --primary-foreground: 255 255 255;
+    --action: 139 108 239;
+    --action-foreground: 255 255 255;
 
-    --secondary: 51 51 51;
+    --secondary: 42 42 42;
     --secondary-foreground: 220 221 222;
-    --muted: 51 51 51;
+    --muted: 42 42 42;
     --muted-foreground: 142 142 142;
-    --accent: 51 51 51;
+    --accent: 42 42 42;
     --accent-foreground: 220 221 222;
 
     --success: 76 195 138;
-    --success-soft: 30 58 46;
+    --success-soft: 36 50 43;
     --destructive: 240 106 106;
-    --destructive-soft: 58 35 38;
+    --destructive-soft: 55 39 39;
     --destructive-foreground: 220 221 222;
     --warning: 229 180 84;
-    --warning-soft: 58 50 34;
+    --warning-soft: 54 48 37;
 
-    --border: 58 58 58;
-    --border-strong: 74 74 74;
+    --border: 47 47 47;
+    --border-strong: 58 58 58;
     --input: 58 58 58;
     --ring: 139 108 239;
 
@@ -46,7 +47,7 @@
     --chart-4: 76 195 138;
     --chart-5: 229 180 84;
 
-    --radius: 10px;
+    --radius: 2px;
   }
 }
 
@@ -57,5 +58,14 @@
 
   body {
     @apply bg-background font-sans text-foreground antialiased;
+  }
+
+  .font-mono,
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+
+  :focus-visible {
+    outline-color: rgb(var(--ring));
   }
 }

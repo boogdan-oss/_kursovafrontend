@@ -172,3 +172,17 @@ export function formatDuration(seconds: number | null | undefined) {
   const parts = [days && `${days} д`, hours && `${hours} год`, minutes && `${minutes} хв`]
   return parts.filter(Boolean).join(' ')
 }
+
+export function formatClock(
+  seconds: number | null | undefined,
+  { alwaysHours = false }: { alwaysHours?: boolean } = {},
+) {
+  if (seconds === null || seconds === undefined || !Number.isFinite(seconds)) return EMPTY
+  const total = Math.max(0, Math.round(seconds))
+  const hours = Math.floor(total / 3_600)
+  const minutes = Math.floor(total / 60) % 60
+  const secs = total % 60
+  const pad = (value: number) => String(value).padStart(2, '0')
+  if (hours === 0 && !alwaysHours) return pad(minutes) + ':' + pad(secs)
+  return hours + ':' + pad(minutes) + ':' + pad(secs)
+}

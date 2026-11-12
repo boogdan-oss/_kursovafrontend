@@ -10,8 +10,8 @@ export const endpoints = {
   calculator: '/calculator',
   collectorStatus: '/collector/status',
 
-  forecast: '/forecast',
-  forecastModels: '/forecast/models',
+  forecast: '/ai/forecast',
+  forecastModels: '/ai/models',
   alertRules: '/alerts/rules',
   alertRule: (id: string) => `/alerts/rules/${id}`,
   notifications: '/notifications',

@@ -1,7 +1,8 @@
-import type { OpportunityHistoryItem, OpportunityItem } from '@/shared/api/types'
+import type { HistoryItem, OpportunityHistoryItem, OpportunityItem } from '@/shared/api/types'
 import { formatCrypto, formatFiat, formatNumber, plural } from '@/shared/lib/format'
 import type { BadgeProps } from '@/shared/ui/badge'
 import { exchangeName } from '@/shared/ui/exchange-label'
+import type { TagTone } from '@/shared/ui/tag'
 
 export type Kind = OpportunityItem['kind']
 export type KindFilter = Kind | 'all'
@@ -22,9 +23,21 @@ export const KIND_BADGES: Record<Kind, BadgeProps['variant']> = {
   chain: 'warning',
 }
 
+export const KIND_TAGS: Record<Kind, string> = {
+  cross_exchange: 'Між біржами',
+  spread: 'На біржі',
+  chain: 'Ланцюжок',
+}
+
+export const KIND_TONES: Record<Kind, TagTone> = {
+  cross_exchange: 'accent',
+  spread: 'neutral',
+  chain: 'warning',
+}
+
 export const KIND_TAB_LABELS: Record<KindFilter, string> = {
   all: 'Усі',
-  cross_exchange: 'Міжбіржові',
+  cross_exchange: 'Між біржами',
   spread: 'На біржі',
   chain: 'Ланцюжки',
 }
@@ -36,9 +49,9 @@ export const KIND_DESCRIPTIONS: Record<Kind, string> = {
 }
 
 export const PERIOD_LABELS: Record<Period, string> = {
-  day: 'Сьогодні',
-  week: '7 днів',
-  month: '30 днів',
+  day: '24Г',
+  week: '7Д',
+  month: '30Д',
 }
 
 export const PERIOD_HOURS: Record<Period, number> = { day: 24, week: 168, month: 720 }
@@ -75,6 +88,10 @@ export function passesThresholds(item: OpportunityItem, thresholds: Thresholds) 
     return Number(item.max_volume) * Number(item.buy_price) >= Number(item.investment)
   }
   return true
+}
+
+export function usesExchanges(item: OpportunityItem, exchanges: readonly string[]) {
+  return item.steps.every((step) => exchanges.includes(step.exchange))
 }
 
 export function involvesAsset(item: OpportunityItem, asset: string) {
@@ -192,4 +209,21 @@ export function downloadCsv(filename: string, csv: string) {
   link.download = filename
   link.click()
   URL.revokeObjectURL(url)
+}
+
+export interface SpreadPoint {
+  time: string
+  value: number
+}
+
+export function spreadSeries(buy: HistoryItem[], sell: HistoryItem[]): SpreadPoint[] {
+  const sellByTime = new Map(sell.map((item) => [item.time, item.sell_price]))
+  const points: SpreadPoint[] = []
+  for (const item of buy) {
+    const buyPrice = Number(item.buy_price)
+    const sellPrice = Number(sellByTime.get(item.time))
+    if (!item.buy_price || !buyPrice || !Number.isFinite(sellPrice) || !sellPrice) continue
+    points.push({ time: item.time, value: ((sellPrice - buyPrice) / buyPrice) * 100 })
+  }
+  return points
 }

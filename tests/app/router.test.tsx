@@ -20,7 +20,6 @@ const PAGES: [string, string][] = [
   ['/offers', 'Сканер P2P-оголошень'],
   ['/arbitrage', 'Арбітражні можливості'],
   ['/calculator', 'Калькулятор угоди'],
-  ['/forecast', 'AI-прогноз ціни'],
   ['/assistant', 'AI-асистент'],
   ['/alerts', 'Сповіщення та Watchlist'],
   ['/community', 'Спільнота'],

@@ -208,23 +208,28 @@ describe('сторінка «Арбітраж»', () => {
 
     const row = (await within(list()).findByText('+1,42%')).closest('tr')!
     expect(row).toHaveAttribute('aria-selected', 'true')
-    expect(within(row).getByText('Міжбіржовий')).toBeInTheDocument()
-    expect(within(row).getByText('42 хв')).toBeInTheDocument()
+    expect(within(row).getByText('Між біржами')).toBeInTheDocument()
+    expect(within(row).getByText(/^42:0\d$/)).toBeInTheDocument()
     expect(within(list()).queryByText('+0,20%')).not.toBeInTheDocument()
 
     expect(await screen.findByRole('tab', { name: 'Усі · 3' })).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: 'Ланцюжки · 1' })).toBeInTheDocument()
-    expect(screen.getByText(/3 активні/)).toBeInTheDocument()
+    expect(screen.getByText('Активні').parentElement).toHaveTextContent('3')
+    expect(screen.getAllByText('Макс. Net')[0].parentElement).toHaveTextContent('+1,42%')
 
     const panel = details()
     expect(within(panel).getByText('Bybit → Binance')).toBeInTheDocument()
-    expect(within(panel).getByText('Активна 42 хв')).toBeInTheDocument()
+    expect(within(panel).getByText(/^Активна 42:0\d$/)).toBeInTheDocument()
     expect(within(panel).getByText('Good Opportunity')).toBeInTheDocument()
     expect(
-      await within(panel).findByText((text) => plain(text) === 'Купити 487,21 USDT на Bybit P2P'),
+      await within(panel).findByText((text) => plain(text) === 'Купити 487,21 USDT · Bybit P2P'),
     ).toBeInTheDocument()
-    expect(within(panel).getByText('Переказати USDT з Bybit на Binance')).toBeInTheDocument()
-    expect(within(panel).getByText((text) => plain(text) === '+284,68 ₴')).toBeInTheDocument()
+    expect(within(panel).getByText('Переказ Bybit → Binance')).toBeInTheDocument()
+    expect(within(panel).getByText('+284,68')).toBeInTheDocument()
+    expect(within(panel).getByRole('link', { name: 'Створити сповіщення' })).toHaveAttribute(
+      'href',
+      '/alerts',
+    )
     expect(within(panel).getByRole('link', { name: 'Відкрити в калькуляторі' })).toHaveAttribute(
       'href',
       '/calculator?asset=USDT&fiat=UAH&buy_exchange=bybit&sell_exchange=binance&investment=20000',
@@ -254,6 +259,14 @@ describe('сторінка «Арбітраж»', () => {
     ).not.toBeInTheDocument()
   })
 
+  it('знята біржа прибирає її маршрути', async () => {
+    renderPage()
+    await within(list()).findByText('+1,42%')
+    await userEvent.click(screen.getByRole('button', { name: 'Binance' }))
+    expect(within(list()).queryByText('+1,42%')).not.toBeInTheDocument()
+    expect(within(list()).getByText('+0,92%')).toBeInTheDocument()
+  })
+
   it('суворі пороги дають порожній стан із кнопкою «Показати всі»', async () => {
     useFiltersStore.getState().setMinAiScore(95)
     renderPage('/arbitrage?type=cross_exchange')
@@ -267,10 +280,10 @@ describe('сторінка «Арбітраж»', () => {
   it('історія показує тривалість і статус', async () => {
     renderPage()
     const history = screen.getAllByRole('table')[1]
-    const active = (await within(history).findByText('42 хв')).closest('tr')!
+    const active = (await within(history).findByText('0:42:00')).closest('tr')!
     expect(within(active).getByText('Активна')).toBeInTheDocument()
-    const finished = within(history).getByText('10 хв').closest('tr')!
-    expect(within(finished).getByText('Завершено')).toBeInTheDocument()
+    const finished = within(history).getByText('0:10:00').closest('tr')!
+    expect(within(finished).getByText('Закрита')).toBeInTheDocument()
   })
 
   it('помилка завантаження дає кнопку повтору', async () => {

@@ -12,7 +12,6 @@ import { RegisterPage } from '@/features/auth/RegisterPage'
 import { CalculatorPage } from '@/features/calculator/CalculatorPage'
 import { CommunityPage } from '@/features/community/CommunityPage'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
-import { ForecastPage } from '@/features/forecast/ForecastPage'
 import { OffersPage } from '@/features/offers/OffersPage'
 
 export const routes: RouteObject[] = [
@@ -24,7 +23,6 @@ export const routes: RouteObject[] = [
       { path: 'offers', element: <OffersPage /> },
       { path: 'arbitrage', element: <ArbitragePage /> },
       { path: 'calculator', element: <CalculatorPage /> },
-      { path: 'forecast', element: <ForecastPage /> },
       { path: 'assistant', element: <AssistantPage /> },
       { path: 'alerts', element: <AlertsPage /> },
       { path: 'community', element: <CommunityPage /> },

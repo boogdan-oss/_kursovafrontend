@@ -1,33 +1,47 @@
 import { useState } from 'react'
 
-import { Route } from '@/features/arbitrage/components/Route'
+import { RouteText } from '@/features/arbitrage/components/OpportunityList'
 import {
-  formatVolume,
   HISTORY_LIMIT,
   isStillActive,
-  KIND_BADGES,
-  KIND_LABELS,
   PERIOD_LABELS,
   PERIODS,
   type Period,
 } from '@/features/arbitrage/lib'
 import type { OpportunityHistoryItem } from '@/shared/api/types'
 import {
+  formatClock,
   formatDate,
   formatDateTime,
-  formatDuration,
+  formatNumber,
   formatPercent,
   formatShortTime,
 } from '@/shared/lib/format'
-import { Badge } from '@/shared/ui/badge'
-import { Card, CardDescription, CardTitle } from '@/shared/ui/card'
+import { cn } from '@/shared/lib/utils'
 import { Pagination } from '@/shared/ui/pagination'
+import { Panel, PanelHeader } from '@/shared/ui/panel'
+import { Segmented } from '@/shared/ui/segmented'
 import { Skeleton } from '@/shared/ui/skeleton'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
-import { Tabs, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  terminalCell,
+  terminalHead,
+} from '@/shared/ui/table'
+import { Tag } from '@/shared/ui/tag'
 
 const PAGE_SIZE = 8
 const SKELETON_ROWS = 3
+
+const PERIOD_META: Record<Period, string> = {
+  day: 'за 24 години',
+  week: 'за 7 днів',
+  month: 'за 30 днів',
+}
 
 function formatStart(value: string, now: number) {
   return formatDate(value) === formatDate(now) ? formatShortTime(value) : formatDateTime(value)
@@ -58,44 +72,38 @@ export function OpportunityHistory({
   const pageItems = items.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE)
 
   return (
-    <Card className="overflow-hidden">
-      <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
-        <div className="flex flex-col gap-0.5">
-          <CardTitle>Історія можливостей</CardTitle>
-          <CardDescription>
-            Знайдені раніше можливості та скільки вони існували
-            {items.length >= HISTORY_LIMIT && ` · останні ${HISTORY_LIMIT}`}
-          </CardDescription>
-        </div>
-        <Tabs value={period} onValueChange={(value) => onPeriodChange(value as Period)}>
-          <TabsList>
-            {PERIODS.map((value) => (
-              <TabsTrigger key={value} value={value}>
-                {PERIOD_LABELS[value]}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
-      </div>
+    <Panel className="overflow-hidden">
+      <PanelHeader
+        title="Історія можливостей"
+        meta={`${PERIOD_META[period]}${items.length >= HISTORY_LIMIT ? ` · останні ${HISTORY_LIMIT}` : ''}`}
+        actions={
+          <Segmented
+            value={period}
+            onValueChange={onPeriodChange}
+            options={PERIODS.map((value) => ({ value, label: PERIOD_LABELS[value] }))}
+            size="sm"
+            label="Період"
+          />
+        }
+      />
 
-      <Table className="min-w-[820px]">
-        <TableHeader>
+      <Table className="min-w-[760px] font-mono">
+        <TableHeader className="bg-transparent">
           <TableRow>
-            <TableHead className="w-[150px]">Час</TableHead>
-            <TableHead>Маршрут</TableHead>
-            <TableHead className="w-[130px]">Тип</TableHead>
-            <TableHead className="w-[100px] text-right">Net %</TableHead>
-            <TableHead className="w-[130px] text-right">Тривалість</TableHead>
-            <TableHead className="w-[130px] text-right">Обсяг</TableHead>
-            <TableHead className="w-[120px] text-right">Статус</TableHead>
+            <TableHead className={cn(terminalHead, 'w-[130px]')}>Початок</TableHead>
+            <TableHead className={terminalHead}>Маршрут</TableHead>
+            <TableHead className={cn(terminalHead, 'w-[140px] text-right')}>Макс. Net</TableHead>
+            <TableHead className={cn(terminalHead, 'w-[160px] text-right')}>Тривалість</TableHead>
+            <TableHead className={cn(terminalHead, 'w-[160px] text-right')}>Макс. обсяг</TableHead>
+            <TableHead className={cn(terminalHead, 'w-[140px] text-right')}>Статус</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {isLoading
             ? Array.from({ length: SKELETON_ROWS }, (_, index) => (
                 <TableRow key={index} className="hover:bg-transparent">
-                  <TableCell colSpan={7}>
-                    <Skeleton className="h-6 w-full" />
+                  <TableCell colSpan={6} className={terminalCell}>
+                    <Skeleton className="h-4 w-full" />
                   </TableCell>
                 </TableRow>
               ))
@@ -105,28 +113,29 @@ export function OpportunityHistory({
                   <TableRow
                     key={`${item.detected_at}:${item.kind}:${item.buy_exchange}:${item.sell_exchange}`}
                   >
-                    <TableCell className="whitespace-nowrap text-caption tabular-nums">
+                    <TableCell
+                      className={cn(terminalCell, 'whitespace-nowrap text-muted-foreground')}
+                    >
                       {formatStart(item.detected_at, now)}
                     </TableCell>
-                    <TableCell>
-                      <Route from={item.buy_exchange} to={item.sell_exchange} />
+                    <TableCell className={terminalCell}>
+                      <RouteText from={item.buy_exchange} to={item.sell_exchange} />
                     </TableCell>
-                    <TableCell>
-                      <Badge variant={KIND_BADGES[item.kind]}>{KIND_LABELS[item.kind]}</Badge>
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap text-right text-caption font-semibold tabular-nums text-success">
+                    <TableCell className={cn(terminalCell, 'text-right text-success')}>
                       {formatPercent(item.net_spread_pct, { signed: true })}
                     </TableCell>
-                    <TableCell className="whitespace-nowrap text-right text-caption tabular-nums">
-                      {formatDuration(item.duration_sec)}
+                    <TableCell className={cn(terminalCell, 'text-right')}>
+                      {formatClock(item.duration_sec, { alwaysHours: true })}
                     </TableCell>
-                    <TableCell className="whitespace-nowrap text-right text-caption tabular-nums">
-                      {formatVolume(item.max_volume, item.asset)}
+                    <TableCell className={cn(terminalCell, 'text-right')}>
+                      {formatNumber(item.max_volume, {
+                        maxDigits: Math.abs(Number(item.max_volume)) >= 100 ? 0 : 4,
+                      })}
                     </TableCell>
-                    <TableCell className="text-right">
-                      <Badge variant={active ? 'success' : 'neutral'}>
-                        {active ? 'Активна' : 'Завершено'}
-                      </Badge>
+                    <TableCell className={cn(terminalCell, 'text-right')}>
+                      <Tag tone={active ? 'success' : 'neutral'}>
+                        {active ? 'Активна' : 'Закрита'}
+                      </Tag>
                     </TableCell>
                   </TableRow>
                 )
@@ -135,7 +144,7 @@ export function OpportunityHistory({
       </Table>
 
       {!isLoading && items.length === 0 && (
-        <p className="border-t px-5 py-10 text-center text-caption text-muted-foreground">
+        <p className="px-3 py-8 text-center text-ui text-muted-foreground">
           {failed
             ? 'Не вдалося завантажити історію'
             : 'За цей період можливостей для пари не знайдено'}
@@ -143,14 +152,14 @@ export function OpportunityHistory({
       )}
 
       {items.length > PAGE_SIZE && (
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t px-5 py-3.5">
-          <span className="text-small text-muted-foreground">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t px-3 py-2">
+          <span className="text-ui text-muted-foreground">
             Показано {(current - 1) * PAGE_SIZE + 1}–{(current - 1) * PAGE_SIZE + pageItems.length}{' '}
             з {items.length}
           </span>
           <Pagination page={current} pageCount={pageCount} onPageChange={setPage} />
         </div>
       )}
-    </Card>
+    </Panel>
   )
 }

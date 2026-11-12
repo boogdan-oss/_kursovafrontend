@@ -1,45 +1,5 @@
 import type { DecimalString } from '@/shared/api/types'
 
-export interface ForecastPoint {
-  time: string
-  price: DecimalString
-  lower: DecimalString | null
-  upper: DecimalString | null
-}
-
-export interface ForecastFeature {
-  name: string
-  importance_pct: DecimalString
-}
-
-export interface ForecastResponse {
-  asset: string
-  fiat: string
-  exchange: string
-  horizon_min: number
-  model: string
-  current_price: DecimalString
-  predicted_price: DecimalString
-  change_pct: DecimalString
-  confidence_pct: DecimalString
-  generated_at: string
-  history: ForecastPoint[]
-  forecast: ForecastPoint[]
-  features: ForecastFeature[]
-}
-
-export interface ForecastModel {
-  name: string
-  status: 'active' | 'archived' | 'baseline'
-  mae: DecimalString
-  trained_at: string | null
-}
-
-export interface ForecastModelsResponse {
-  count: number
-  items: ForecastModel[]
-}
-
 export type AlertChannel = 'app' | 'telegram'
 
 export interface AlertRule {

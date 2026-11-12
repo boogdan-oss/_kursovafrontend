@@ -2,18 +2,32 @@
   "count": 4,
   "items": [
     {
-      "name": "LightGBM v12",
+      "name": "Демо: лінійний тренд",
       "status": "active",
-      "mae": "0.041",
-      "trained_at": "2026-11-10T03:00:00Z"
+      "mae": null,
+      "trained_at": null,
+      "description": "рахується в браузері за реальною історією"
     },
     {
-      "name": "LightGBM v11",
-      "status": "archived",
-      "mae": "0.044",
-      "trained_at": "2026-11-09T03:00:00Z"
+      "name": "LightGBM",
+      "status": "planned",
+      "mae": null,
+      "trained_at": null,
+      "description": "основна модель, ще не навчена на бекенді"
     },
-    { "name": "ARIMA", "status": "baseline", "mae": "0.058", "trained_at": null },
-    { "name": "Наївний прогноз", "status": "baseline", "mae": "0.066", "trained_at": null }
+    {
+      "name": "ARIMA",
+      "status": "planned",
+      "mae": null,
+      "trained_at": null,
+      "description": "статистичний бейзлайн"
+    },
+    {
+      "name": "Наївний прогноз «як зараз»",
+      "status": "baseline",
+      "mae": null,
+      "trained_at": null,
+      "description": "з ним порівнюється точність"
+    }
   ]
 }

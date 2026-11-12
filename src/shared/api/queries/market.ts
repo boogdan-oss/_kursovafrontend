@@ -4,6 +4,8 @@ import { apiClient } from '@/shared/api/client'
 import { endpoints } from '@/shared/api/endpoints'
 import { queryKeys } from '@/shared/api/queryKeys'
 import type {
+  HistoryParams,
+  HistoryResponse,
   MarketsParams,
   MarketsResponse,
   SnapshotParams,
@@ -55,4 +57,12 @@ export function useMarketSnapshot(params: SnapshotParams) {
     refetchInterval: MARKET_REFRESH_MS,
     placeholderData: keepPreviousData,
   })
+}
+
+export async function fetchMarketHistory(params: HistoryParams, signal?: AbortSignal) {
+  const { data } = await apiClient.get<HistoryResponse>(endpoints.marketHistory, {
+    params,
+    signal,
+  })
+  return data
 }

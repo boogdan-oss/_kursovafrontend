@@ -1,15 +1,17 @@
-import { delay, http, HttpResponse } from 'msw'
+import { bypass, delay, http, HttpResponse } from 'msw'
 
 import { endpoints } from '@/shared/api/endpoints'
+import type { ForecastHorizon, ForecastSide } from '@/shared/api/forecast-types'
+import type { HistoryResponse } from '@/shared/api/types'
 
 import alertRulesJson from './fixtures/alert-rules.json'
 import communityPostsJson from './fixtures/community-posts.json'
 import conversationsJson from './fixtures/conversations.json'
 import forecastModelsJson from './fixtures/forecast-models.json'
-import forecastJson from './fixtures/forecast.json'
 import notificationsJson from './fixtures/notifications.json'
 import userJson from './fixtures/user.json'
 import watchlistJson from './fixtures/watchlist.json'
+import { MIN_POINTS, trendForecast, type PricePoint } from './forecast-model'
 import type {
   AlertRule,
   AlertRuleInput,
@@ -24,6 +26,7 @@ import type {
 const url = (path: string) => `*/api/v1${path}`
 
 const LATENCY_MS = 250
+const HISTORY_WINDOW_MS = 8 * 3_600_000
 const MOCK_TOKEN = 'mock-access-token'
 
 let rules = structuredClone(alertRulesJson.items) as AlertRule[]
@@ -37,14 +40,46 @@ function detail(message: string, status: number) {
 
 export const handlers = [
   http.get(url(endpoints.forecast), async ({ request }) => {
-    await delay(LATENCY_MS)
-    const params = new URL(request.url).searchParams
-    return HttpResponse.json({
-      ...forecastJson,
-      asset: params.get('asset') ?? forecastJson.asset,
-      fiat: params.get('fiat') ?? forecastJson.fiat,
-      exchange: params.get('exchange') ?? forecastJson.exchange,
-    })
+    const query = new URL(request.url).searchParams
+    const asset = (query.get('asset') ?? 'USDT').toUpperCase()
+    const fiat = (query.get('fiat') ?? 'UAH').toUpperCase()
+    const exchange = query.get('exchange') ?? 'bybit'
+    const side: ForecastSide = query.get('side') === 'SELL' ? 'SELL' : 'BUY'
+    const requested = Number(query.get('horizon'))
+    const horizon: ForecastHorizon = requested === 15 || requested === 30 ? requested : 60
+
+    const apiBase = request.url.slice(0, request.url.indexOf('/api/v1') + '/api/v1'.length)
+    const historyUrl = new URL(`${apiBase}${endpoints.marketHistory}`)
+    historyUrl.search = new URLSearchParams({
+      asset,
+      fiat,
+      exchange,
+      interval: '1m',
+      from: new Date(Date.now() - HISTORY_WINDOW_MS).toISOString(),
+    }).toString()
+
+    let history: HistoryResponse
+    try {
+      const response = await fetch(bypass(new Request(historyUrl)))
+      if (!response.ok) return detail('Не вдалося отримати історію цін для прогнозу', 503)
+      history = (await response.json()) as HistoryResponse
+    } catch {
+      return detail('Не вдалося отримати історію цін для прогнозу', 503)
+    }
+
+    const points: PricePoint[] = []
+    for (const item of history.items) {
+      const price = side === 'BUY' ? item.buy_price : item.sell_price
+      if (price != null) points.push({ time: Date.parse(item.time), price: Number(price) })
+    }
+    const result = trendForecast(points, { asset, fiat, exchange, side, horizon })
+    if (!result) {
+      return detail(
+        `Замало історії для прогнозу: потрібно щонайменше ${MIN_POINTS} хвилин даних`,
+        404,
+      )
+    }
+    return HttpResponse.json(result)
   }),
 
   http.get(url(endpoints.forecastModels), async () => {

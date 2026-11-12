@@ -96,3 +96,6 @@ const TableCaption = React.forwardRef<
 TableCaption.displayName = 'TableCaption'
 
 export { Table, TableHeader, TableBody, TableFooter, TableHead, TableRow, TableCell, TableCaption }
+
+export const terminalHead = 'h-7 px-3 text-label font-medium uppercase text-tertiary'
+export const terminalCell = 'h-8 px-3 py-0 text-data'

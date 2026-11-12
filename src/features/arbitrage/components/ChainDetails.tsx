@@ -9,7 +9,9 @@ interface StepText {
 }
 
 function tradeDetail(step: OpportunityStep, price: string) {
-  return step.payment_method ? `за ${price} · ${paymentLabel(step.payment_method)}` : `за ${price}`
+  return step.payment_method
+    ? `ціна ${price} · ${paymentLabel(step.payment_method)}`
+    : `ціна ${price}`
 }
 
 function describeSteps(opportunity: OpportunityItem, deal: Deal | undefined): StepText[] {
@@ -22,7 +24,7 @@ function describeSteps(opportunity: OpportunityItem, deal: Deal | undefined): St
       const target = exchangeName(steps[index + 1]?.exchange ?? opportunity.sell_exchange)
       const fee = deal ? Number(deal.quantity) - Number(deal.sell_quantity) : null
       return {
-        title: `Переказати ${step.asset} з ${exchange} на ${target}`,
+        title: `Переказ ${exchange} → ${target}`,
         detail:
           fee === null
             ? 'комісія виводу врахована в Net %'
@@ -39,7 +41,7 @@ function describeSteps(opportunity: OpportunityItem, deal: Deal | undefined): St
     const amount =
       quantity === null ? step.asset : formatCrypto(quantity, step.asset, { maxDigits: 2 })
     return {
-      title: `${buying ? 'Купити' : 'Продати'} ${amount} на ${exchange} P2P`,
+      title: `${buying ? 'Купити' : 'Продати'} ${amount} · ${exchange} P2P`,
       detail: tradeDetail(step, price),
     }
   })
@@ -52,15 +54,13 @@ interface ChainDetailsProps {
 
 export function ChainDetails({ opportunity, deal }: ChainDetailsProps) {
   return (
-    <ol className="flex flex-col gap-3">
+    <ol className="flex flex-col">
       {describeSteps(opportunity, deal).map((step, index) => (
-        <li key={index} className="flex gap-3">
-          <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary-soft text-small font-semibold text-primary">
-            {index + 1}
-          </span>
+        <li key={index} className="flex gap-2.5 border-b px-3 py-2">
+          <span className="font-mono text-ui-lg font-semibold text-primary">{index + 1}</span>
           <div className="flex min-w-0 flex-col gap-0.5">
-            <span className="text-caption font-semibold">{step.title}</span>
-            <span className="text-small text-muted-foreground">{step.detail}</span>
+            <span className="text-ui-lg font-semibold">{step.title}</span>
+            <span className="text-meta text-muted-foreground">{step.detail}</span>
           </div>
         </li>
       ))}
