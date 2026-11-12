@@ -1,10 +1,54 @@
-import { Bell, Search } from 'lucide-react'
+import { Bell, LogOut, Search } from 'lucide-react'
 import { useEffect, useRef } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 
 import { Logo } from '@/app/layout/Logo'
 import { MainNav, MobileNav } from '@/app/layout/Nav'
+import { useLogout } from '@/features/auth/hooks'
+import { Avatar } from '@/shared/ui/avatar'
 import { Button } from '@/shared/ui/button'
+import { useAuthStore } from '@/store/useAuthStore'
+
+function Account() {
+  const user = useAuthStore((state) => state.session?.user)
+  const logout = useLogout()
+  const { pathname, search } = useLocation()
+
+  if (!user) {
+    return (
+      <Button asChild variant="secondary">
+        <Link to="/login" state={{ from: pathname + search }}>
+          Увійти
+        </Link>
+      </Button>
+    )
+  }
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <Link
+        to="/profile"
+        title={user.username}
+        aria-label={`Профіль ${user.username}`}
+        className="rounded-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+      >
+        <Avatar
+          name={user.username}
+          className="size-[26px] rounded-sm border border-border-strong bg-elevated text-meta"
+        />
+      </Link>
+      <Button
+        variant="ghost"
+        size="icon"
+        aria-label="Вийти"
+        disabled={logout.isPending}
+        onClick={() => logout.mutate()}
+      >
+        <LogOut />
+      </Button>
+    </div>
+  )
+}
 
 function HeaderSearch() {
   const inputRef = useRef<HTMLInputElement>(null)
@@ -52,9 +96,7 @@ export function Header() {
             <Bell />
           </Link>
         </Button>
-        <Button asChild variant="secondary">
-          <Link to="/login">Увійти</Link>
-        </Button>
+        <Account />
       </div>
     </header>
   )

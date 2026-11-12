@@ -31,6 +31,10 @@ export type CalculatorRequest = Schema<'CalculatorRequest'>
 export type CalculatorResponse = Schema<'CalculatorResponse'>
 export type Deal = Schema<'Deal'>
 export type CollectorStatusResponse = Schema<'CollectorStatusResponse'>
+export type AuthResponse = Schema<'AuthResponse'>
+export type LoginRequest = Schema<'LoginRequest'>
+export type RegisterRequest = Schema<'RegisterRequest'>
+export type User = Schema<'UserOut'>
 
 export type MarketsParams = QueryParams<'list_markets_api_v1_markets_get'>
 export type SnapshotParams = QueryParams<'market_snapshot_api_v1_market_snapshot_get'>

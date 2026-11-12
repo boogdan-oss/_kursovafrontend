@@ -39,6 +39,12 @@ export function formatNumber(value: Numeric, options: NumberOptions = {}) {
   }).format(number)
 }
 
+export function formatCompact(value: Numeric) {
+  const number = toNumber(value)
+  if (number === null) return EMPTY
+  return numberFormatter({ notation: 'compact', maximumFractionDigits: 2 }).format(number)
+}
+
 export function formatFiat(value: Numeric, fiat = 'UAH', options: NumberOptions = {}) {
   const number = toNumber(value)
   if (number === null) return EMPTY

@@ -141,7 +141,7 @@ export interface paths {
          * Поточні арбітражні можливості, найкращі першими
          * @description Рахується зі свіжих (до 5 хвилин) оголошень у БД після всіх комісій. Потрібно щонайменше 3 надійні оголошення на кожній стороні; спред понад 5 % вважається аномалією (нетипові оголошення), а не прибутком, і не показується.
          *
-         *     kind: spread — купити й продати на одній біржі, cross_exchange — між біржами, chain — цикл через кілька активів чи фіатів (потрібен fiat, рахується лише на окремий запит; для угоди потрібні рахунки в усіх валютах циклу).
+         *     kind: spread — купити й продати на одній біржі, cross_exchange — між біржами, chain — цикл через кілька активів чи фіатів (потрібен fiat, рахується лише на окремий запит; для угоди потрібні рахунки в усіх валютах циклу). Ланцюжки кешуються для пари fiat + investment: результат до 30 с вважається свіжим, старіший віддається одразу й перераховується у фоні; detected_at показує, коли їх пораховано.
          *
          *     Без investment сума береться типова для пари (медіана мінімальних лімітів). Комісії виводу орієнтовні, а вимоги продавців до контрагента тут не враховані, тому прибуток — верхня оцінка. Перед угодою перевіряйте все на біржі. Це аналітика, а не гарантія.
          */
@@ -205,7 +205,7 @@ export interface paths {
          * Чи працює збір і чи записуються дані в БД
          * @description collector — поточна швидкість rate limiter і лічильники від запуску (з Redis; null — collector не працює). tables — скільки рядків уже в БД: виклич двічі, і кількість має зростати.
          *
-         *     storage — скільки місця займають дані і бюджет: понад нього collector видаляє найстаріші дні сирих оголошень.
+         *     storage — скільки місця займають дані і бюджет: понад нього, а також коли на диску лишається менше min_free_gb, collector видаляє найстаріші дні сирих оголошень.
          */
         get: operations["collector_status_api_v1_collector_status_get"];
         put?: never;
@@ -216,10 +216,303 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Реєстрація
+         * @description Одразу повертає токени: окремий вхід після реєстрації не потрібен.
+         */
+        post: operations["register_user_api_v1_auth_register_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Вхід за username або email
+         * @description access_token передається в заголовку Authorization: Bearer <токен>. Коли він закінчиться (401), нову пару дає /auth/refresh. Після 10 невдалих спроб за 15 хвилин вхід для цього логіна тимчасово блокується (429).
+         */
+        post: operations["login_user_api_v1_auth_login_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Нова пара токенів за refresh-токеном
+         * @description Refresh-токен одноразовий: після обміну старий недійсний. Повторне використання вже обміняного токена закриває всі сесії користувача.
+         */
+        post: operations["refresh_tokens_api_v1_auth_refresh_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Вихід: відкликає refresh-токен */
+        post: operations["logout_user_api_v1_auth_logout_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/change-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Зміна пароля
+         * @description Усі сесії закриваються: на інших пристроях доведеться увійти знову.
+         */
+        post: operations["change_user_password_api_v1_auth_change_password_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Профіль поточного користувача */
+        get: operations["me_api_v1_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Змінити персональні налаштування
+         * @description Змінюються лише передані поля; null прибирає поле.
+         */
+        patch: operations["patch_settings_api_v1_me_settings_patch"];
+        trace?: never;
+    };
+    "/api/v1/me/telegram": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Посилання для підключення Telegram
+         * @description Відкрийте посилання й натисніть Start у боті: чат прив'яжеться до акаунта. Посилання одноразове і дійсне 10 хвилин.
+         */
+        post: operations["telegram_link_api_v1_me_telegram_post"];
+        /** Відключити Telegram */
+        delete: operations["telegram_unlink_api_v1_me_telegram_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/watchlist": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Обрані пари
+         * @description Пари з обраного collector оновлює найчастіше (FR-17). Ціни — /market/snapshot.
+         */
+        get: operations["list_items_api_v1_watchlist_get"];
+        put?: never;
+        /**
+         * Додати пару в обране
+         * @description Якщо пара вже в обраному, повертається наявний запис з кодом 200.
+         */
+        post: operations["add_item_api_v1_watchlist_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/watchlist/{item_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Прибрати пару з обраного */
+        delete: operations["delete_item_api_v1_watchlist__item_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/alerts/rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Мої правила сповіщень */
+        get: operations["list_rules_api_v1_alerts_rules_get"];
+        put?: never;
+        /**
+         * Створити правило сповіщення
+         * @description Правило спрацьовує на кожну нову можливість пари, що досягла всіх заданих порогів (хоча б один обов'язковий). Канали: in_app (сайт, WebSocket-подія alert), telegram (спершу POST /me/telegram), email (якщо на сервері налаштовано SMTP).
+         */
+        post: operations["create_api_v1_alerts_rules_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/alerts/rules/{rule_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Видалити правило */
+        delete: operations["delete_api_v1_alerts_rules__rule_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Змінити правило
+         * @description Змінюються лише передані поля; null у порозі прибирає поріг.
+         */
+        patch: operations["patch_api_v1_alerts_rules__rule_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Історія сповіщень, новіші першими */
+        get: operations["notifications_api_v1_notifications_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Позначити сповіщення прочитаними */
+        post: operations["read_notifications_api_v1_notifications_read_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AuthResponse */
+        AuthResponse: {
+            /** Access Token */
+            access_token: string;
+            /** Refresh Token */
+            refresh_token: string;
+            /**
+             * Token Type
+             * @default bearer
+             * @constant
+             */
+            token_type: "bearer";
+            /**
+             * Expires In
+             * @description Скільки секунд дійсний access_token
+             */
+            expires_in: number;
+            /** Refresh Expires In */
+            refresh_expires_in: number;
+            user: components["schemas"]["UserOut"];
+        };
         /** CalculatorRequest */
         CalculatorRequest: {
             /**
@@ -289,6 +582,13 @@ export interface components {
             sell_slippage_pct: string | null;
             /** Fully Filled */
             fully_filled: boolean;
+        };
+        /** ChangePasswordRequest */
+        ChangePasswordRequest: {
+            /** Current Password */
+            current_password: string;
+            /** New Password */
+            new_password: string;
         };
         /**
          * CollectorStatus
@@ -496,6 +796,29 @@ export interface components {
             /** Items */
             items: components["schemas"]["HistoryItem"][];
         };
+        /** LoginRequest */
+        LoginRequest: {
+            /**
+             * Login
+             * @description username або email
+             */
+            login: string;
+            /** Password */
+            password: string;
+        };
+        /** MarkReadRequest */
+        MarkReadRequest: {
+            /**
+             * Ids
+             * @description Без ids — позначити всі
+             */
+            ids?: number[] | null;
+        };
+        /** MarkReadResponse */
+        MarkReadResponse: {
+            /** Updated */
+            updated: number;
+        };
         /** MarketItem */
         MarketItem: {
             /** Exchange */
@@ -575,6 +898,43 @@ export interface components {
             /** Completion Rate */
             completion_rate: string;
         };
+        /** NotificationOut */
+        NotificationOut: {
+            /** Id */
+            id: number;
+            /** Rule Id */
+            rule_id: number | null;
+            /** Rule Title */
+            rule_title: string | null;
+            /** Text */
+            text: string;
+            /** Channels */
+            channels: ("in_app" | "telegram" | "email")[];
+            /**
+             * Delivery
+             * @description Результат по каналах: sent, failed, skipped: <причина>
+             */
+            delivery: {
+                [key: string]: string;
+            };
+            opportunity: components["schemas"]["Opportunity"] | null;
+            /** Read */
+            read: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** NotificationsResponse */
+        NotificationsResponse: {
+            /** Count */
+            count: number;
+            /** Unread */
+            unread: number;
+            /** Items */
+            items: components["schemas"]["NotificationOut"][];
+        };
         /**
          * Offer
          * @description Нормалізоване P2P-оголошення — вихід будь-якого `ExchangeAdapter`.
@@ -636,6 +996,51 @@ export interface components {
             count: number;
             /** Items */
             items: components["schemas"]["OpportunityItem"][];
+        };
+        /** Opportunity */
+        Opportunity: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "spread" | "cross_exchange" | "chain";
+            /** Asset */
+            asset: string;
+            /** Fiat */
+            fiat: string;
+            /** Buy Exchange */
+            buy_exchange: string;
+            /** Sell Exchange */
+            sell_exchange: string;
+            /** Buy Price */
+            buy_price: string;
+            /** Sell Price */
+            sell_price: string;
+            /** Steps */
+            steps: components["schemas"]["Step"][];
+            /** Spread Pct */
+            spread_pct: string;
+            /** Net Spread Pct */
+            net_spread_pct: string;
+            /** Estimated Profit */
+            estimated_profit: string;
+            /** Max Volume */
+            max_volume: string;
+            /** Rr */
+            rr?: string | null;
+            /** Risk Score */
+            risk_score?: number | null;
+            /** Risk Level */
+            risk_level?: ("low" | "medium" | "high") | null;
+            /** Ai Score */
+            ai_score?: number | null;
+            /** Investment */
+            investment?: string | null;
+            /**
+             * Detected At
+             * Format: date-time
+             */
+            detected_at: string;
         };
         /** OpportunityHistoryItem */
         OpportunityHistoryItem: {
@@ -750,6 +1155,148 @@ export interface components {
              */
             time: string;
         };
+        /** RefreshRequest */
+        RefreshRequest: {
+            /** Refresh Token */
+            refresh_token: string;
+        };
+        /** RegisterRequest */
+        RegisterRequest: {
+            /** Username */
+            username: string;
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+            /** Password */
+            password: string;
+        };
+        /** RuleIn */
+        RuleIn: {
+            /** Title */
+            title?: string | null;
+            /**
+             * Exchange
+             * @description Купівля або продаж на цій біржі
+             */
+            exchange?: string | null;
+            /**
+             * Payment
+             * @description Спосіб оплати
+             */
+            payment?: string | null;
+            /** Min Spread */
+            min_spread?: number | string | null;
+            /** Min Net Spread */
+            min_net_spread?: number | string | null;
+            /** Min Ai Score */
+            min_ai_score?: number | null;
+            /** Min Rr */
+            min_rr?: number | string | null;
+            /**
+             * Min Net Profit
+             * @description У фіаті пари
+             */
+            min_net_profit?: number | string | null;
+            /** Asset */
+            asset: string;
+            /** Fiat */
+            fiat: string;
+            /**
+             * Channels
+             * @default [
+             *       "in_app"
+             *     ]
+             */
+            channels: ("in_app" | "telegram" | "email")[];
+            /**
+             * Enabled
+             * @default true
+             */
+            enabled: boolean;
+        };
+        /** RuleOut */
+        RuleOut: {
+            /** Id */
+            id: number;
+            /** Title */
+            title: string | null;
+            /** Asset */
+            asset: string;
+            /** Fiat */
+            fiat: string;
+            /** Exchange */
+            exchange: string | null;
+            /** Payment */
+            payment: string | null;
+            /** Min Spread */
+            min_spread: string | null;
+            /** Min Net Spread */
+            min_net_spread: string | null;
+            /** Min Ai Score */
+            min_ai_score: number | null;
+            /** Min Rr */
+            min_rr: string | null;
+            /** Min Net Profit */
+            min_net_profit: string | null;
+            /** Channels */
+            channels: ("in_app" | "telegram" | "email")[];
+            /** Enabled */
+            enabled: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Last Triggered At */
+            last_triggered_at: string | null;
+            /** Triggered Today */
+            triggered_today: number;
+        };
+        /** RulePatch */
+        RulePatch: {
+            /** Title */
+            title?: string | null;
+            /**
+             * Exchange
+             * @description Купівля або продаж на цій біржі
+             */
+            exchange?: string | null;
+            /**
+             * Payment
+             * @description Спосіб оплати
+             */
+            payment?: string | null;
+            /** Min Spread */
+            min_spread?: number | string | null;
+            /** Min Net Spread */
+            min_net_spread?: number | string | null;
+            /** Min Ai Score */
+            min_ai_score?: number | null;
+            /** Min Rr */
+            min_rr?: number | string | null;
+            /**
+             * Min Net Profit
+             * @description У фіаті пари
+             */
+            min_net_profit?: number | string | null;
+            /** Asset */
+            asset?: string | null;
+            /** Fiat */
+            fiat?: string | null;
+            /** Channels */
+            channels?: ("in_app" | "telegram" | "email")[] | null;
+            /** Enabled */
+            enabled?: boolean | null;
+        };
+        /** RulesResponse */
+        RulesResponse: {
+            /** Count */
+            count: number;
+            /** Items */
+            items: components["schemas"]["RuleOut"][];
+        };
         /** SnapshotResponse */
         SnapshotResponse: {
             /** Asset */
@@ -792,6 +1339,10 @@ export interface components {
             budget_gb: number;
             /** Per Exchange Gb */
             per_exchange_gb: number;
+            /** Disk Free Gb */
+            disk_free_gb: number;
+            /** Min Free Gb */
+            min_free_gb: number;
             /** Full */
             full: boolean;
         };
@@ -806,6 +1357,88 @@ export interface components {
             /** Size Mb */
             size_mb: number;
         };
+        /** TelegramLinkResponse */
+        TelegramLinkResponse: {
+            /** Url */
+            url: string;
+            /** Expires In */
+            expires_in: number;
+        };
+        /** UserOut */
+        UserOut: {
+            /** Id */
+            id: number;
+            /** Username */
+            username: string;
+            /** Email */
+            email: string;
+            role: components["schemas"]["UserRole"];
+            status: components["schemas"]["UserStatus"];
+            /** Telegram Connected */
+            telegram_connected: boolean;
+            settings: components["schemas"]["UserSettings-Output"];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /**
+         * UserRole
+         * @enum {string}
+         */
+        UserRole: "user" | "admin";
+        /**
+         * UserSettings
+         * @description Персональні налаштування. Усі поля необов'язкові; null у PATCH прибирає поле.
+         */
+        "UserSettings-Input": {
+            /** Default Asset */
+            default_asset?: string | null;
+            /** Default Fiat */
+            default_fiat?: string | null;
+            /** Default Payment */
+            default_payment?: string | null;
+            /** Default Investment */
+            default_investment?: number | string | null;
+            /** Min Rr */
+            min_rr?: number | string | null;
+            /**
+             * Extra Fees
+             * @description Додаткові комісії у фіаті
+             */
+            extra_fees?: number | string | null;
+            /** Hide Illiquid */
+            hide_illiquid?: boolean | null;
+        };
+        /**
+         * UserSettings
+         * @description Персональні налаштування. Усі поля необов'язкові; null у PATCH прибирає поле.
+         */
+        "UserSettings-Output": {
+            /** Default Asset */
+            default_asset?: string | null;
+            /** Default Fiat */
+            default_fiat?: string | null;
+            /** Default Payment */
+            default_payment?: string | null;
+            /** Default Investment */
+            default_investment?: string | null;
+            /** Min Rr */
+            min_rr?: string | null;
+            /**
+             * Extra Fees
+             * @description Додаткові комісії у фіаті
+             */
+            extra_fees?: string | null;
+            /** Hide Illiquid */
+            hide_illiquid?: boolean | null;
+        };
+        /**
+         * UserStatus
+         * @enum {string}
+         */
+        UserStatus: "active" | "suspended" | "banned";
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -818,6 +1451,41 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** WatchlistIn */
+        WatchlistIn: {
+            /** Asset */
+            asset: string;
+            /** Fiat */
+            fiat: string;
+            /**
+             * Exchange
+             * @description Без біржі — пара на всіх біржах
+             */
+            exchange?: string | null;
+        };
+        /** WatchlistItemOut */
+        WatchlistItemOut: {
+            /** Id */
+            id: number;
+            /** Asset */
+            asset: string;
+            /** Fiat */
+            fiat: string;
+            /** Exchange */
+            exchange: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** WatchlistResponse */
+        WatchlistResponse: {
+            /** Count */
+            count: number;
+            /** Items */
+            items: components["schemas"]["WatchlistItemOut"][];
         };
     };
     responses: never;
@@ -1150,6 +1818,522 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CollectorStatusResponse"];
+                };
+            };
+        };
+    };
+    register_user_api_v1_auth_register_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    login_user_api_v1_auth_login_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    refresh_tokens_api_v1_auth_refresh_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RefreshRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    logout_user_api_v1_auth_logout_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RefreshRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    change_user_password_api_v1_auth_change_password_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangePasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    me_api_v1_me_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserOut"];
+                };
+            };
+        };
+    };
+    patch_settings_api_v1_me_settings_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserSettings-Input"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    telegram_link_api_v1_me_telegram_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TelegramLinkResponse"];
+                };
+            };
+        };
+    };
+    telegram_unlink_api_v1_me_telegram_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    list_items_api_v1_watchlist_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WatchlistResponse"];
+                };
+            };
+        };
+    };
+    add_item_api_v1_watchlist_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WatchlistIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WatchlistItemOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_item_api_v1_watchlist__item_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_rules_api_v1_alerts_rules_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RulesResponse"];
+                };
+            };
+        };
+    };
+    create_api_v1_alerts_rules_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RuleIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RuleOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_api_v1_alerts_rules__rule_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_api_v1_alerts_rules__rule_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RulePatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RuleOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    notifications_api_v1_notifications_get: {
+        parameters: {
+            query?: {
+                unread_only?: boolean;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_notifications_api_v1_notifications_read_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarkReadRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarkReadResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

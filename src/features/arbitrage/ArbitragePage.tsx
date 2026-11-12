@@ -32,15 +32,14 @@ import {
   type Thresholds,
 } from '@/features/arbitrage/lib'
 import { toApiError } from '@/shared/api/client'
-import { usePairOptions } from '@/shared/api/queries/market'
 import { useNow } from '@/shared/hooks/useNow'
 import { formatNumber, formatPercent, formatRelativeTime, plural } from '@/shared/lib/format'
 import { Button } from '@/shared/ui/button'
 import { ContextBar, ContextField, ContextLive } from '@/shared/ui/context-bar'
 import { exchangeName } from '@/shared/ui/exchange-label'
 import { Pagination } from '@/shared/ui/pagination'
+import { PairSelect } from '@/shared/ui/pair-select'
 import { Panel, PanelHeader } from '@/shared/ui/panel'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { useMarketSocket, useMarketSocketStatus } from '@/shared/ws/useMarketSocket'
 import { EXCHANGES, useFiltersStore } from '@/store/useFiltersStore'
 
@@ -51,47 +50,6 @@ const HIDDEN_FORMS = [
   'можливості не проходять',
   'можливостей не проходять',
 ] as const
-
-function PairSelect() {
-  const asset = useFiltersStore((state) => state.asset)
-  const fiat = useFiltersStore((state) => state.fiat)
-  const setPair = useFiltersStore((state) => state.setPair)
-  const setBank = useFiltersStore((state) => state.setBank)
-  const { assets, fiats } = usePairOptions(asset, fiat)
-  const pair = `${asset}/${fiat}`
-  const options = [
-    ...new Set([
-      pair,
-      ...assets.map((code) => `${code}/${fiat}`),
-      ...fiats.map((code) => `${asset}/${code}`),
-    ]),
-  ]
-
-  return (
-    <Select
-      value={pair}
-      onValueChange={(value) => {
-        const [nextAsset, nextFiat] = value.split('/')
-        if (nextFiat !== fiat) setBank(null)
-        setPair(nextAsset, nextFiat)
-      }}
-    >
-      <SelectTrigger
-        aria-label="Пара"
-        className="h-auto w-auto gap-1 border-0 bg-transparent p-0 text-ui-lg font-semibold focus:ring-0 [&>svg]:size-3.5"
-      >
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        {options.map((option) => (
-          <SelectItem key={option} value={option}>
-            {option.replace('/', ' / ')}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  )
-}
 
 export function ArbitragePage() {
   const [searchParams, setSearchParams] = useSearchParams()

@@ -20,6 +20,8 @@ export const endpoints = {
   assistantChat: '/assistant/chat',
   authLogin: '/auth/login',
   authRegister: '/auth/register',
-  authMe: '/auth/me',
+  authRefresh: '/auth/refresh',
+  authLogout: '/auth/logout',
+  me: '/me',
   communityPosts: '/community/posts',
 } as const

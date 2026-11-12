@@ -9,30 +9,17 @@ import communityPostsJson from './fixtures/community-posts.json'
 import conversationsJson from './fixtures/conversations.json'
 import forecastModelsJson from './fixtures/forecast-models.json'
 import notificationsJson from './fixtures/notifications.json'
-import userJson from './fixtures/user.json'
 import watchlistJson from './fixtures/watchlist.json'
 import { MIN_POINTS, trendForecast, type PricePoint } from './forecast-model'
-import type {
-  AlertRule,
-  AlertRuleInput,
-  AuthResponse,
-  ChatRequest,
-  ChatResponse,
-  LoginRequest,
-  RegisterRequest,
-  User,
-} from './types'
+import type { AlertRule, AlertRuleInput, ChatRequest, ChatResponse } from './types'
 
 const url = (path: string) => `*/api/v1${path}`
 
 const LATENCY_MS = 250
 const HISTORY_WINDOW_MS = 8 * 3_600_000
-const MOCK_TOKEN = 'mock-access-token'
 
 let rules = structuredClone(alertRulesJson.items) as AlertRule[]
 let nextRuleId = rules.length + 1
-
-const user = userJson as User
 
 function detail(message: string, status: number) {
   return HttpResponse.json({ detail: message }, { status })
@@ -154,43 +141,6 @@ export const handlers = [
       },
     }
     return HttpResponse.json(response)
-  }),
-
-  http.post(url(endpoints.authLogin), async ({ request }) => {
-    await delay(LATENCY_MS)
-    const { email, password } = (await request.json()) as LoginRequest
-    if (!email || !password) return detail('Невірний email або пароль', 401)
-    const response: AuthResponse = {
-      access_token: MOCK_TOKEN,
-      token_type: 'bearer',
-      user: { ...user, email },
-    }
-    return HttpResponse.json(response)
-  }),
-
-  http.post(url(endpoints.authRegister), async ({ request }) => {
-    await delay(LATENCY_MS)
-    const input = (await request.json()) as RegisterRequest
-    if (!input.email || !input.password) return detail('Вкажіть email і пароль', 422)
-    const response: AuthResponse = {
-      access_token: MOCK_TOKEN,
-      token_type: 'bearer',
-      user: {
-        ...user,
-        email: input.email,
-        first_name: input.first_name || user.first_name,
-        nickname: input.nickname || user.nickname,
-      },
-    }
-    return HttpResponse.json(response, { status: 201 })
-  }),
-
-  http.get(url(endpoints.authMe), async ({ request }) => {
-    await delay(LATENCY_MS)
-    if (request.headers.get('Authorization') !== `Bearer ${MOCK_TOKEN}`) {
-      return detail('Потрібно увійти в акаунт', 401)
-    }
-    return HttpResponse.json(user)
   }),
 
   http.get(url(endpoints.communityPosts), async () => {

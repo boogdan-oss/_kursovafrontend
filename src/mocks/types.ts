@@ -81,31 +81,6 @@ export interface ChatResponse {
   }
 }
 
-export interface User {
-  id: string
-  email: string
-  first_name: string
-  last_name: string
-  nickname: string
-  created_at: string
-}
-
-export interface LoginRequest {
-  email: string
-  password: string
-}
-
-export interface RegisterRequest extends LoginRequest {
-  first_name: string
-  nickname: string
-}
-
-export interface AuthResponse {
-  access_token: string
-  token_type: 'bearer'
-  user: User
-}
-
 export interface CommunityPost {
   id: string
   author: { nickname: string; name: string }

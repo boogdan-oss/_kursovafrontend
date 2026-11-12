@@ -24,7 +24,7 @@ export function pageItems(page: number, pageCount: number): PageItem[] {
 }
 
 const itemClass =
-  'flex size-8 items-center justify-center rounded-md border text-caption font-semibold text-muted-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+  'flex h-6 min-w-[26px] items-center justify-center rounded-sm border border-border-strong bg-elevated px-1 font-mono text-ui font-semibold text-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring'
 
 export function Pagination({ page, pageCount, onPageChange, className }: PaginationProps) {
   if (pageCount <= 1) return null
@@ -33,12 +33,12 @@ export function Pagination({ page, pageCount, onPageChange, className }: Paginat
     <nav className={cn('flex items-center gap-1', className)} aria-label="Сторінки">
       <button
         type="button"
-        className={cn(itemClass, 'hover:text-foreground disabled:opacity-40')}
+        className={cn(itemClass, 'enabled:hover:bg-accent disabled:opacity-40')}
         disabled={page <= 1}
         onClick={() => onPageChange(page - 1)}
         aria-label="Попередня сторінка"
       >
-        <ChevronLeft className="size-4" />
+        <ChevronLeft className="size-3.5" />
       </button>
       {pageItems(page, pageCount).map((item) =>
         typeof item === 'number' ? (
@@ -48,28 +48,30 @@ export function Pagination({ page, pageCount, onPageChange, className }: Paginat
             aria-current={item === page ? 'page' : undefined}
             className={cn(
               itemClass,
-              item === page
-                ? 'border-primary/70 bg-accent text-foreground'
-                : 'hover:text-foreground',
+              item === page ? 'border-primary text-primary' : 'hover:bg-accent',
             )}
             onClick={() => onPageChange(item)}
           >
             {item}
           </button>
         ) : (
-          <span key={item} className={cn(itemClass, 'border-transparent')} aria-hidden>
+          <span
+            key={item}
+            className={cn(itemClass, 'border-transparent bg-transparent text-tertiary')}
+            aria-hidden
+          >
             …
           </span>
         ),
       )}
       <button
         type="button"
-        className={cn(itemClass, 'hover:text-foreground disabled:opacity-40')}
+        className={cn(itemClass, 'enabled:hover:bg-accent disabled:opacity-40')}
         disabled={page >= pageCount}
         onClick={() => onPageChange(page + 1)}
         aria-label="Наступна сторінка"
       >
-        <ChevronRight className="size-4" />
+        <ChevronRight className="size-3.5" />
       </button>
     </nav>
   )

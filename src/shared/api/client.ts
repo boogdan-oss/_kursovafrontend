@@ -1,4 +1,7 @@
-import axios, { AxiosError } from 'axios'
+import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios'
+
+import type { AuthResponse } from '@/shared/api/types'
+import { useAuthStore } from '@/store/useAuthStore'
 
 export const API_URL = import.meta.env.VITE_API_URL ?? ''
 
@@ -117,9 +120,62 @@ export const apiClient = axios.create({
   headers: { Accept: 'application/json' },
 })
 
+const AUTH_PATHS = ['/auth/login', '/auth/register', '/auth/refresh', '/auth/logout']
+
+let refreshing: Promise<string | null> | null = null
+
+async function refreshAccessToken() {
+  const { session, remember, signIn, signOut } = useAuthStore.getState()
+  if (!session) return null
+  try {
+    const { data } = await axios.post<AuthResponse>(
+      `${apiClient.defaults.baseURL}/auth/refresh`,
+      { refresh_token: session.refreshToken },
+      { timeout: TIMEOUT_MS },
+    )
+    signIn(data, remember)
+    return data.access_token
+  } catch {
+    signOut()
+    return null
+  }
+}
+
+apiClient.interceptors.request.use((config) => {
+  const token = useAuthStore.getState().session?.accessToken
+  if (token && !config.headers.has('Authorization')) {
+    config.headers.set('Authorization', `Bearer ${token}`)
+  }
+  return config
+})
+
 apiClient.interceptors.response.use(
   (response) => response,
-  (error: unknown) => Promise.reject(toApiError(error)),
+  async (error: unknown) => {
+    const config = axios.isAxiosError(error)
+      ? (error.config as (InternalAxiosRequestConfig & { retried?: boolean }) | undefined)
+      : undefined
+    const canRefresh =
+      axios.isAxiosError(error) &&
+      error.response?.status === 401 &&
+      config &&
+      !config.retried &&
+      !AUTH_PATHS.includes(config.url ?? '') &&
+      useAuthStore.getState().session
+
+    if (canRefresh) {
+      refreshing ??= refreshAccessToken().finally(() => {
+        refreshing = null
+      })
+      const token = await refreshing
+      if (token) {
+        config.retried = true
+        config.headers.set('Authorization', `Bearer ${token}`)
+        return apiClient(config)
+      }
+    }
+    return Promise.reject(toApiError(error))
+  },
 )
 
 export const api = apiClient

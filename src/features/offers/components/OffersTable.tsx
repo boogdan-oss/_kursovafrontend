@@ -1,67 +1,58 @@
-import { BadgeCheck, ExternalLink } from 'lucide-react'
+import { ArrowUpRight } from 'lucide-react'
 
-import { exchangeMarketUrl, isReliable, offerKey, type Side } from '@/features/offers/lib'
+import {
+  deviationPct,
+  exchangeMarketUrl,
+  isSuspicious,
+  offerKey,
+  RISK_LABELS,
+  RISK_TONES,
+  riskLevel,
+  type Side,
+} from '@/features/offers/lib'
 import type { Offer } from '@/shared/api/types'
-import { formatCrypto, formatFiat, formatNumber, formatRatio, plural } from '@/shared/lib/format'
+import { formatNumber, formatPercent, formatRatio } from '@/shared/lib/format'
 import { paymentLabel } from '@/shared/lib/payments'
 import { cn } from '@/shared/lib/utils'
-import { Avatar } from '@/shared/ui/avatar'
-import { Badge } from '@/shared/ui/badge'
-import { Button } from '@/shared/ui/button'
-import { ExchangeLabel } from '@/shared/ui/exchange-label'
+import { exchangeName } from '@/shared/ui/exchange-label'
 import { Skeleton } from '@/shared/ui/skeleton'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  terminalCell,
+  terminalHead,
+} from '@/shared/ui/table'
+import { Tag } from '@/shared/ui/tag'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 
 const VISIBLE_PAYMENTS = 2
 const SKELETON_ROWS = 8
-const DEAL_FORMS = ['угода', 'угоди', 'угод'] as const
+const COLUMNS = 12
 
-function Seller({ offer }: { offer: Offer }) {
-  const { merchant } = offer
-  return (
-    <div className="flex items-center gap-2.5">
-      <Avatar name={merchant.nickname} />
-      <div className="flex min-w-0 flex-col gap-0.5">
-        <span className="flex items-center gap-1.5">
-          <span className="max-w-[220px] truncate text-caption font-semibold">
-            {merchant.nickname}
-          </span>
-          {isReliable(merchant) && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <BadgeCheck
-                  className="size-3.5 shrink-0 text-success"
-                  aria-label="Надійний продавець"
-                />
-              </TooltipTrigger>
-              <TooltipContent>Надійний продавець</TooltipContent>
-            </Tooltip>
-          )}
-        </span>
-        <span className="text-small text-muted-foreground">
-          {formatNumber(merchant.orders_30d)} {plural(merchant.orders_30d, DEAL_FORMS)} ·{' '}
-          {formatRatio(merchant.completion_rate)}
-        </span>
-      </div>
-    </div>
-  )
+function amountDigits(value: string | number) {
+  return Math.abs(Number(value)) >= 1 ? { minDigits: 2, maxDigits: 2 } : { maxDigits: 6 }
 }
 
 function Payments({ methods }: { methods: string[] }) {
   const visible = methods.slice(0, VISIBLE_PAYMENTS)
   const hidden = methods.slice(VISIBLE_PAYMENTS)
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
+    <div className="flex items-center gap-1">
       {visible.map((method) => (
-        <Badge key={method}>{paymentLabel(method)}</Badge>
+        <Tag key={method} className="max-w-[96px] truncate">
+          {paymentLabel(method)}
+        </Tag>
       ))}
       {hidden.length > 0 && (
         <Tooltip>
           <TooltipTrigger asChild>
-            <Badge tabIndex={0} className="cursor-default">
+            <Tag tabIndex={0} className="cursor-default font-mono">
               +{hidden.length}
-            </Badge>
+            </Tag>
           </TooltipTrigger>
           <TooltipContent className="max-w-[260px]">
             {hidden.map(paymentLabel).join(', ')}
@@ -72,107 +63,132 @@ function Payments({ methods }: { methods: string[] }) {
   )
 }
 
-function SkeletonRows() {
-  return Array.from({ length: SKELETON_ROWS }, (_, index) => (
-    <TableRow key={index} className="hover:bg-transparent">
-      <TableCell className="py-3.5">
-        <div className="flex items-center gap-2.5">
-          <Skeleton className="size-8 rounded-full" />
-          <div className="flex flex-col gap-1.5">
-            <Skeleton className="h-3.5 w-32" />
-            <Skeleton className="h-3 w-24" />
-          </div>
-        </div>
-      </TableCell>
-      <TableCell>
-        <Skeleton className="h-4 w-20" />
-      </TableCell>
-      <TableCell>
-        <Skeleton className="h-4 w-16" />
-      </TableCell>
-      <TableCell>
-        <Skeleton className="h-4 w-28" />
-      </TableCell>
-      <TableCell>
-        <Skeleton className="h-5 w-32" />
-      </TableCell>
-      <TableCell>
-        <Skeleton className="ml-auto h-8 w-24" />
-      </TableCell>
-    </TableRow>
-  ))
-}
-
 interface OffersTableProps {
   offers: Offer[]
+  firstRank: number
   side: Side
+  asset: string
+  fiat: string
   bestPrice: string | undefined
+  reference: number | null
   isLoading: boolean
 }
 
-export function OffersTable({ offers, side, bestPrice, isLoading }: OffersTableProps) {
+export function OffersTable({
+  offers,
+  firstRank,
+  side,
+  asset,
+  fiat,
+  bestPrice,
+  reference,
+  isLoading,
+}: OffersTableProps) {
   return (
-    <Table className="min-w-[920px]">
-      <TableHeader>
+    <Table className="min-w-[1000px]">
+      <TableHeader className="bg-transparent">
         <TableRow>
-          <TableHead>Продавець</TableHead>
-          <TableHead className="w-[130px]">Біржа</TableHead>
-          <TableHead className="w-[120px]">Ціна</TableHead>
-          <TableHead className="w-[190px]">Доступно / ліміти</TableHead>
-          <TableHead className="w-[230px]">Оплата</TableHead>
-          <TableHead className="w-[140px]" />
+          <TableHead className={cn(terminalHead, 'w-[42px]')}>#</TableHead>
+          <TableHead className={terminalHead}>Продавець</TableHead>
+          <TableHead className={cn(terminalHead, 'w-[84px]')}>Біржа</TableHead>
+          <TableHead className={cn(terminalHead, 'w-[84px] text-right')}>Ціна</TableHead>
+          <TableHead className={cn(terminalHead, 'w-[96px] text-right')}>Від медіани</TableHead>
+          <TableHead className={cn(terminalHead, 'w-[116px] text-right')}>
+            Доступно, {asset}
+          </TableHead>
+          <TableHead className={cn(terminalHead, 'w-[150px] text-right')}>Ліміти, {fiat}</TableHead>
+          <TableHead className={cn(terminalHead, 'w-[150px]')}>Оплата</TableHead>
+          <TableHead className={cn(terminalHead, 'w-[76px] text-right')}>Угод 30д</TableHead>
+          <TableHead className={cn(terminalHead, 'w-[70px] text-right')}>Викон.</TableHead>
+          <TableHead className={cn(terminalHead, 'w-[90px]')}>Ризик</TableHead>
+          <TableHead className={cn(terminalHead, 'w-[36px]')}>
+            <span className="sr-only">Посилання</span>
+          </TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
-        {isLoading ? (
-          <SkeletonRows />
-        ) : (
-          offers.map((offer) => {
-            const url = exchangeMarketUrl(offer.exchange, side, offer.asset, offer.fiat)
-            return (
-              <TableRow key={offerKey(offer)}>
-                <TableCell className="py-3.5">
-                  <Seller offer={offer} />
-                </TableCell>
-                <TableCell>
-                  <ExchangeLabel exchange={offer.exchange} />
-                </TableCell>
-                <TableCell
-                  className={cn(
-                    'whitespace-nowrap text-body font-semibold tabular-nums',
-                    offer.price === bestPrice && 'text-success',
-                  )}
-                >
-                  {formatFiat(offer.price, offer.fiat)}
-                </TableCell>
-                <TableCell>
-                  <div className="flex flex-col gap-0.5 whitespace-nowrap tabular-nums">
-                    <span className="text-caption">
-                      {formatCrypto(offer.available, offer.asset)}
-                    </span>
-                    <span className="text-small text-muted-foreground">
-                      {formatNumber(offer.min_amount, { maxDigits: 0 })} –{' '}
-                      {formatFiat(offer.max_amount, offer.fiat, { minDigits: 0, maxDigits: 0 })}
-                    </span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Payments methods={offer.payment_methods} />
-                </TableCell>
-                <TableCell className="text-right">
-                  {url && (
-                    <Button asChild variant="secondary" size="sm">
-                      <a href={url} target="_blank" rel="noreferrer">
-                        На біржу
-                        <ExternalLink />
-                      </a>
-                    </Button>
-                  )}
+        {isLoading
+          ? Array.from({ length: SKELETON_ROWS }, (_, index) => (
+              <TableRow key={index} className="hover:bg-transparent">
+                <TableCell colSpan={COLUMNS} className={terminalCell}>
+                  <Skeleton className="h-4 w-full" />
                 </TableCell>
               </TableRow>
-            )
-          })
-        )}
+            ))
+          : offers.map((offer, index) => {
+              const url = exchangeMarketUrl(offer.exchange, side, offer.asset, offer.fiat)
+              const deviation = deviationPct(offer.price, reference)
+              const risk = riskLevel(offer, reference, side)
+              const flagged = isSuspicious(offer, reference, side)
+              return (
+                <TableRow key={offerKey(offer)}>
+                  <TableCell className={cn(terminalCell, 'font-mono text-tertiary')}>
+                    {String(firstRank + index).padStart(2, '0')}
+                  </TableCell>
+                  <TableCell className={cn(terminalCell, 'max-w-[200px] truncate font-semibold')}>
+                    {offer.merchant.nickname}
+                  </TableCell>
+                  <TableCell className={terminalCell}>{exchangeName(offer.exchange)}</TableCell>
+                  <TableCell
+                    className={cn(
+                      terminalCell,
+                      'text-right font-mono font-semibold',
+                      flagged ? 'text-destructive' : offer.price === bestPrice && 'text-success',
+                    )}
+                  >
+                    {formatNumber(offer.price, { minDigits: 2 })}
+                  </TableCell>
+                  <TableCell
+                    className={cn(
+                      terminalCell,
+                      'text-right font-mono',
+                      flagged ? 'text-destructive' : 'text-muted-foreground',
+                    )}
+                  >
+                    {deviation === null
+                      ? '—'
+                      : formatPercent(deviation, { minDigits: 2, maxDigits: 2, signed: true })}
+                  </TableCell>
+                  <TableCell className={cn(terminalCell, 'text-right font-mono')}>
+                    {formatNumber(offer.available, amountDigits(offer.available))}
+                  </TableCell>
+                  <TableCell
+                    className={cn(
+                      terminalCell,
+                      'whitespace-nowrap text-right font-mono text-muted-foreground',
+                    )}
+                  >
+                    {formatNumber(offer.min_amount, { maxDigits: 0 })} –{' '}
+                    {formatNumber(offer.max_amount, { maxDigits: 0 })}
+                  </TableCell>
+                  <TableCell className={terminalCell}>
+                    <Payments methods={offer.payment_methods} />
+                  </TableCell>
+                  <TableCell className={cn(terminalCell, 'text-right font-mono')}>
+                    {formatNumber(offer.merchant.orders_30d)}
+                  </TableCell>
+                  <TableCell className={cn(terminalCell, 'text-right font-mono')}>
+                    {formatRatio(offer.merchant.completion_rate)}
+                  </TableCell>
+                  <TableCell className={terminalCell}>
+                    <Tag tone={RISK_TONES[risk]}>{RISK_LABELS[risk]}</Tag>
+                  </TableCell>
+                  <TableCell className={cn(terminalCell, 'px-2')}>
+                    {url && (
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label={`На біржу ${exchangeName(offer.exchange)}`}
+                        className="flex size-6 items-center justify-center rounded-sm text-primary hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      >
+                        <ArrowUpRight className="size-4" />
+                      </a>
+                    )}
+                  </TableCell>
+                </TableRow>
+              )
+            })}
       </TableBody>
     </Table>
   )

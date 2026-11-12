@@ -32,6 +32,10 @@ if (typeof globalThis.localStorage?.setItem !== 'function') {
   vi.stubGlobal('localStorage', new MemoryStorage())
 }
 
+if (typeof globalThis.sessionStorage?.setItem !== 'function') {
+  vi.stubGlobal('sessionStorage', new MemoryStorage())
+}
+
 vi.mock('lightweight-charts', () => {
   const series = { setData: vi.fn() }
   const chart = {

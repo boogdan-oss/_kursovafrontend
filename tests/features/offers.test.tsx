@@ -3,7 +3,14 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 
 import { Providers } from '@/app/providers'
-import { bestSnapshot, isReliable, sortOffers } from '@/features/offers/lib'
+import {
+  bestSnapshot,
+  depthLevels,
+  isReliable,
+  medianPrice,
+  riskLevel,
+  sortOffers,
+} from '@/features/offers/lib'
 import { OffersPage } from '@/features/offers/OffersPage'
 import { ApiError, apiClient } from '@/shared/api/client'
 import type { MarketSnapshot, Offer } from '@/shared/api/types'
@@ -34,7 +41,7 @@ function offer(overrides: Partial<Offer> & { nickname?: string; orders?: number;
 const OFFERS = [
   offer({ nickname: 'CryptoMax', price: '41.05', orders: 1284, rate: '0.992' }),
   offer({ nickname: 'SafeP2P', exchange: 'okx', price: '41.12', max_amount: '100000' }),
-  offer({ nickname: 'newtrader_77', price: '39.90', orders: 12, rate: '0.833' }),
+  offer({ nickname: 'newtrader_77', price: '39.70', orders: 12, rate: '0.833' }),
   offer({
     nickname: 'FastCoin',
     exchange: 'binance',
@@ -74,6 +81,35 @@ describe('offers lib', () => {
     expect(names(sortOffers(OFFERS, 'price', 'SELL'))[0]).toBe('FastCoin')
     expect(names(sortOffers(OFFERS, 'rating', 'BUY'))[0]).toBe('CryptoMax')
     expect(names(sortOffers(OFFERS, 'limit', 'BUY'))[0]).toBe('SafeP2P')
+    expect(
+      names(
+        sortOffers([OFFERS[0], offer({ nickname: 'Big', available: '9000' })], 'volume', 'BUY'),
+      )[0],
+    ).toBe('Big')
+  })
+
+  it('медіана топ-5 і ризик продавця', () => {
+    expect(medianPrice(OFFERS, 'BUY')).toBeCloseTo(41.085)
+    expect(medianPrice([], 'BUY')).toBeNull()
+    expect(riskLevel(OFFERS[0], 41.12, 'BUY')).toBe('low')
+    expect(riskLevel(OFFERS[2], 41.12, 'BUY')).toBe('high')
+    expect(riskLevel(offer({ orders: 214, rate: '0.961' }), 41.12, 'BUY')).toBe('medium')
+    expect(riskLevel(offer({ price: '39.80' }), 41.12, 'BUY')).toBe('high')
+  })
+
+  it('глибина групує обсяг за ціною від найкращої', () => {
+    const levels = depthLevels(
+      [
+        offer({ price: '41.10' }),
+        offer({ price: '41.10', available: '50' }),
+        offer({ price: '41.00' }),
+      ],
+      'BUY',
+    )
+    expect(levels).toEqual([
+      { price: 41, volume: 2450 },
+      { price: 41.1, volume: 2500 },
+    ])
   })
 
   it('обирає найкращий знімок серед вибраних бірж', () => {
@@ -165,13 +201,17 @@ describe('сторінка «Ринок»', () => {
     )
   }
 
-  it('показує надійних продавців, найкращу ціну й підсумок', async () => {
+  it('показує надійних продавців, найкращу ціну, KPI та глибину', async () => {
     renderPage()
 
     const row = (await screen.findByText('CryptoMax')).closest('tr')!
-    expect(within(row).getByText((text) => plain(text) === '41,05 ₴')).toHaveClass('text-success')
-    expect(within(row).getByText(/1.284 угоди · 99,2%/)).toBeInTheDocument()
-    expect(within(row).getByRole('link', { name: /На біржу/ })).toHaveAttribute(
+    expect(within(row).getByText('41,05')).toHaveClass('text-success')
+    expect(within(row).getByText('01')).toBeInTheDocument()
+    expect(within(row).getByText((text) => plain(text) === '1 284')).toBeInTheDocument()
+    expect(within(row).getByText('99,2%')).toBeInTheDocument()
+    expect(within(row).getByText(/^[−-]0,07%$/)).toBeInTheDocument()
+    expect(within(row).getByText('Низький')).toBeInTheDocument()
+    expect(within(row).getByRole('link', { name: 'На біржу Bybit' })).toHaveAttribute(
       'href',
       'https://www.bybit.com/fiat/trade/otc/?actionType=1&token=USDT&fiat=UAH',
     )
@@ -179,16 +219,30 @@ describe('сторінка «Ринок»', () => {
     expect(screen.queryByText('newtrader_77')).not.toBeInTheDocument()
     expect(screen.getByText('Bybit · CryptoMax')).toBeInTheDocument()
     expect(screen.getByText('ефективна ціна · Bybit')).toBeInTheDocument()
-    expect(screen.getByText('із 4 зібраних')).toBeInTheDocument()
-    expect(screen.getByText(/3 оголошення з 3 бірж/)).toBeInTheDocument()
+    expect(screen.getByText('після фільтрів: 3')).toBeInTheDocument()
+    expect(screen.getByText('Ризикові').parentElement).toHaveTextContent('1')
     expect(screen.getByText('Binance: дані застаріли')).toBeInTheDocument()
     expect(screen.getByText('+2')).toBeInTheDocument()
+    expect(screen.getByText('Показано 1–3 з 3')).toBeInTheDocument()
+
+    const depth = screen.getByRole('region', { name: 'Глибина пропозиції' })
+    expect(within(depth).getAllByRole('row')).toHaveLength(4)
   })
 
-  it('вимкнений фільтр надійності показує всіх', async () => {
-    renderPage('/offers?reliable=0')
-    expect(await screen.findByText('newtrader_77')).toBeInTheDocument()
+  it('вимкнені фільтри продавців показують всіх', async () => {
+    renderPage('/offers?rate=0&orders=0')
+    const row = (await screen.findByText('newtrader_77')).closest('tr')!
+    expect(within(row).getByText('Високий')).toBeInTheDocument()
+    expect(within(row).getByText('39,70')).toHaveClass('text-destructive')
     expect(screen.getByText('Bybit · newtrader_77')).toBeInTheDocument()
+  })
+
+  it('перемикач «Мін. 50 угод» окремо від виконання', async () => {
+    renderPage('/offers?rate=0')
+    await screen.findByText('CryptoMax')
+    expect(screen.queryByText('newtrader_77')).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('switch', { name: 'Мін. 50 угод' }))
+    expect(screen.getByText('newtrader_77')).toBeInTheDocument()
   })
 
   it('зняття біржі прибирає її оголошення', async () => {
@@ -204,7 +258,7 @@ describe('сторінка «Ринок»', () => {
     useFiltersStore.getState().setExchanges(['bybit'])
     renderPage()
     await screen.findByText('CryptoMax')
-    await userEvent.click(screen.getByRole('button', { name: 'Рейтинг' }))
+    await userEvent.click(screen.getByRole('tab', { name: 'Рейтинг' }))
     expect(screen.getByText(/відсортовано за рейтингом продавця/)).toBeInTheDocument()
 
     vi.mocked(apiClient.get).mockResolvedValue({
