@@ -1,4 +1,10 @@
-import { KIND_TAGS, KIND_TONES, opportunityKey } from '@/features/arbitrage/lib'
+import {
+  currencyPath,
+  foreignFiats,
+  KIND_TAGS,
+  KIND_TONES,
+  opportunityKey,
+} from '@/features/arbitrage/lib'
 import type { OpportunityItem } from '@/shared/api/types'
 import { formatClock, formatNumber, formatPercent } from '@/shared/lib/format'
 import { cn } from '@/shared/lib/utils'
@@ -53,6 +59,30 @@ interface OpportunityListProps {
   isLoading: boolean
 }
 
+function ChainPath({ item }: { item: OpportunityItem }) {
+  const path = currencyPath(item)
+  if (!path) return null
+  const foreign = foreignFiats(item)
+  return (
+    <span className="block text-meta text-muted-foreground">
+      {path.join(' → ')}
+      {foreign.length > 0 && (
+        <span className="text-warning"> · рахунок у {foreign.join(', ')}</span>
+      )}
+    </span>
+  )
+}
+
+function PriceUnit({ item, at }: { item: OpportunityItem; at: 'first' | 'last' }) {
+  const step = at === 'first' ? item.steps[0] : item.steps[item.steps.length - 1]
+  if (!step) return null
+  return (
+    <span className="block text-meta text-muted-foreground">
+      {item.fiat} за {step.asset}
+    </span>
+  )
+}
+
 export function OpportunityList({
   items,
   firstRank,
@@ -77,9 +107,7 @@ export function OpportunityList({
           <TableHead className={cn(terminalHead, 'w-[84px] text-right')}>Продаж</TableHead>
           <TableHead className={cn(terminalHead, 'w-[80px] text-right')}>Gross</TableHead>
           <TableHead className={cn(terminalHead, 'w-[90px] text-right')}>Net ▾</TableHead>
-          <TableHead className={cn(terminalHead, 'w-[110px] text-right')}>
-            Обсяг, {items[0]?.asset ?? ''}
-          </TableHead>
+          <TableHead className={cn(terminalHead, 'w-[130px] text-right')}>Обсяг</TableHead>
           <TableHead className={cn(terminalHead, 'w-[104px]')}>AI Score</TableHead>
           <TableHead className={cn(terminalHead, 'w-[80px] text-right')}>Триває</TableHead>
         </TableRow>
@@ -122,15 +150,18 @@ export function OpportunityList({
                   </TableCell>
                   <TableCell className={terminalCell}>
                     <RouteText from={item.buy_exchange} to={item.sell_exchange} />
+                    {item.kind === 'chain' && <ChainPath item={item} />}
                   </TableCell>
                   <TableCell className={terminalCell}>
                     <Tag tone={KIND_TONES[item.kind]}>{KIND_TAGS[item.kind]}</Tag>
                   </TableCell>
                   <TableCell className={cn(terminalCell, 'text-right')}>
                     {price(item.buy_price)}
+                    {item.kind === 'chain' && <PriceUnit item={item} at="first" />}
                   </TableCell>
                   <TableCell className={cn(terminalCell, 'text-right')}>
                     {price(item.sell_price)}
+                    {item.kind === 'chain' && <PriceUnit item={item} at="last" />}
                   </TableCell>
                   <TableCell className={cn(terminalCell, 'text-right text-muted-foreground')}>
                     {formatPercent(item.spread_pct)}
@@ -139,7 +170,8 @@ export function OpportunityList({
                     {formatPercent(item.net_spread_pct, { signed: true })}
                   </TableCell>
                   <TableCell className={cn(terminalCell, 'whitespace-nowrap text-right')}>
-                    {volume(item.max_volume)}
+                    {volume(item.max_volume)}{' '}
+                    <span className="text-muted-foreground">{item.asset}</span>
                   </TableCell>
                   <TableCell className={terminalCell}>
                     <ScoreCell score={item.ai_score} />

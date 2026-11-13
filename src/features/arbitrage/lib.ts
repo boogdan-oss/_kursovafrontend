@@ -77,10 +77,12 @@ export interface Thresholds {
   minAiScore: number
   minVolume: number | null
   liquidOnly: boolean
+  singleFiat?: boolean
 }
 
 export function passesThresholds(item: OpportunityItem, thresholds: Thresholds) {
-  const { minNet, minAiScore, minVolume, liquidOnly } = thresholds
+  const { minNet, minAiScore, minVolume, liquidOnly, singleFiat } = thresholds
+  if (singleFiat && foreignFiats(item).length > 0) return false
   if (Number(item.net_spread_pct) < minNet) return false
   if (minAiScore > 0 && (item.ai_score ?? -1) < minAiScore) return false
   if (minVolume !== null && Number(item.max_volume) < minVolume) return false
@@ -152,15 +154,49 @@ export function assetPath(item: OpportunityItem) {
   return path
 }
 
+/** Валюти, крім валюти пари, через які проходить угода: для них потрібні окремі рахунки. */
+export function foreignFiats(item: OpportunityItem) {
+  const found: string[] = []
+  for (const step of item.steps) {
+    if (step.fiat && step.fiat !== item.fiat && !found.includes(step.fiat)) found.push(step.fiat)
+  }
+  return found
+}
+
+/** Шлях грошей: UAH → BTC → PLN → USDT → UAH. Без валют у кроках (стара історія) — null. */
+export function currencyPath(item: OpportunityItem) {
+  if (item.steps.some((step) => step.action !== 'TRANSFER' && !step.fiat)) return null
+  const path = [item.fiat]
+  for (const step of item.steps) {
+    const next = step.action === 'BUY' ? step.asset : step.action === 'SELL' ? step.fiat : null
+    if (next && path[path.length - 1] !== next) path.push(next)
+  }
+  return path
+}
+
+const currencyNames = (() => {
+  try {
+    return new Intl.DisplayNames('uk', { type: 'currency' })
+  } catch {
+    return null
+  }
+})()
+
+export function currencyName(code: string) {
+  return currencyNames?.of(code) ?? code
+}
+
 export function routeSummary(item: OpportunityItem) {
   const buy = formatNumber(item.buy_price, { minDigits: 2 })
   const sell = formatFiat(item.sell_price, item.fiat)
   if (item.kind === 'spread') return `купівля ${buy} → продаж ${sell}`
   if (item.kind === 'cross_exchange') return `${buy} → ${sell}`
 
-  const path = assetPath(item)
   const count = item.steps.length
   const steps = `${count} ${plural(count, STEP_FORMS)}`
+  const currencies = currencyPath(item)
+  if (currencies) return `${currencies.join(' → ')} · ${steps}`
+  const path = assetPath(item)
   return path.length > 1
     ? `${path.join(' → ')} · ${steps}`
     : `${path[0]} через іншу валюту · ${steps}`

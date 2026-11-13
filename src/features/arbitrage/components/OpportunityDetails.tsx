@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 
-import { ChainDetails } from '@/features/arbitrage/components/ChainDetails'
+import { ChainDetails, ForeignCurrencyNote } from '@/features/arbitrage/components/ChainDetails'
 import { SpreadSparkline } from '@/features/arbitrage/components/SpreadSparkline'
 import { useDealQuote, useRouteSpread } from '@/features/arbitrage/hooks'
 import { KIND_DESCRIPTIONS } from '@/features/arbitrage/lib'
@@ -15,8 +15,6 @@ import { exchangeName } from '@/shared/ui/exchange-label'
 import { Panel, SectionLabel } from '@/shared/ui/panel'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { Tag } from '@/shared/ui/tag'
-
-const CHAIN_NOTE = 'Для такої угоди потрібні рахунки в усіх валютах ланцюжка.'
 
 function Row({
   label,
@@ -153,7 +151,7 @@ export function OpportunityDetails({
 
       <SectionLabel className="px-3 pb-2 pt-2.5">Кроки угоди</SectionLabel>
       <ChainDetails opportunity={opportunity} deal={deal} />
-      {chain && <p className="border-b px-3 py-2 text-meta text-warning">{CHAIN_NOTE}</p>}
+      <ForeignCurrencyNote opportunity={opportunity} />
 
       <SectionLabel className="px-3 pb-2 pt-2.5">Розрахунок</SectionLabel>
       <Row label="Інвестиція">{money(opportunity.investment)}</Row>

@@ -960,6 +960,30 @@ export interface components {
              */
             offers_count_sell: number;
             /**
+             * Buy Volume
+             * @description Доступно в asset на стороні купівлі (надійні продавці)
+             */
+            buy_volume?: string | null;
+            /**
+             * Sell Volume
+             * @description Доступно в asset на стороні продажу (надійні продавці)
+             */
+            sell_volume?: string | null;
+            /**
+             * Buy Min Amount
+             * @description Найменший мінімум угоди у фіаті серед надійних оголошень
+             */
+            buy_min_amount?: string | null;
+            /**
+             * Buy Max Amount
+             * @description Найбільший максимум угоди у фіаті серед надійних оголошень
+             */
+            buy_max_amount?: string | null;
+            /** Sell Min Amount */
+            sell_min_amount?: string | null;
+            /** Sell Max Amount */
+            sell_max_amount?: string | null;
+            /**
              * Fetched At
              * Format: date-time
              */
@@ -1404,6 +1428,9 @@ export interface components {
         /**
          * Step
          * @description Один крок угоди; для ланцюжків — усі кроки по черзі.
+         *
+         *     amount_in / amount_out — скільки віддаєте й отримуєте на цьому кроці для суми інвестиції:
+         *     BUY — фіат → asset, SELL — asset → фіат, TRANSFER — asset → asset без комісії виводу.
          */
         Step: {
             /** Exchange */
@@ -1415,10 +1442,19 @@ export interface components {
             action: "BUY" | "SELL" | "TRANSFER";
             /** Asset */
             asset: string;
+            /**
+             * Fiat
+             * @description Валюта купівлі чи продажу; None — переказ
+             */
+            fiat?: string | null;
             /** Price */
             price?: string | null;
             /** Payment Method */
             payment_method?: string | null;
+            /** Amount In */
+            amount_in?: string | null;
+            /** Amount Out */
+            amount_out?: string | null;
         };
         /** StorageStatus */
         StorageStatus: {
@@ -1797,6 +1833,8 @@ export interface operations {
                 /** @description Сума у фіаті */
                 investment?: number | string | null;
                 hide_illiquid?: boolean;
+                /** @description Лише угоди без інших валют: ланцюжки через чужий фіат приховати */
+                single_fiat?: boolean;
             };
             header?: never;
             path?: never;

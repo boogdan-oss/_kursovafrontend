@@ -82,6 +82,53 @@ const CHAIN = opportunity({
   ai_category: 'Medium Opportunity',
 })
 
+const VIA_KZT = opportunity({
+  kind: 'chain',
+  sell_exchange: 'bybit',
+  spread_pct: '4.9500',
+  net_spread_pct: '4.9500',
+  ai_score: 84,
+  ai_category: 'Good Opportunity',
+  steps: [
+    {
+      exchange: 'bybit',
+      action: 'BUY',
+      asset: 'USDT',
+      fiat: 'UAH',
+      price: '46.85',
+      amount_in: '20000',
+      amount_out: '426.89434365',
+    },
+    {
+      exchange: 'bybit',
+      action: 'SELL',
+      asset: 'USDT',
+      fiat: 'KZT',
+      price: '510.85',
+      amount_in: '426.89434365',
+      amount_out: '218079.98',
+    },
+    {
+      exchange: 'bybit',
+      action: 'BUY',
+      asset: 'USDC',
+      fiat: 'KZT',
+      price: '483.00',
+      amount_in: '218079.98',
+      amount_out: '451.51134',
+    },
+    {
+      exchange: 'bybit',
+      action: 'SELL',
+      asset: 'USDC',
+      fiat: 'UAH',
+      price: '46.49',
+      amount_in: '451.51134',
+      amount_out: '20990.76',
+    },
+  ],
+})
+
 function historyItem(
   base: OpportunityItem,
   startedMinutesAgo: number,
@@ -140,6 +187,7 @@ describe('arbitrage lib', () => {
     expect(plain(routeSummary(CROSS))).toBe('41,05 → 41,72 ₴')
     expect(plain(routeSummary(SPREAD))).toBe('купівля 41,05 → продаж 41,47 ₴')
     expect(routeSummary(CHAIN)).toBe('USDT через іншу валюту · 4 кроки')
+    expect(routeSummary(VIA_KZT)).toBe('UAH → USDT → KZT → USDC → UAH · 4 кроки')
   })
 
   it('тривалість беруть лише активні записи історії й найкраща можливість маршруту', () => {
@@ -257,6 +305,49 @@ describe('сторінка «Арбітраж»', () => {
     expect(
       within(panel).queryByRole('link', { name: 'Відкрити в калькуляторі' }),
     ).not.toBeInTheDocument()
+  })
+
+  it('ланцюжок показує шлях валют і суми на кожному кроці', async () => {
+    vi.mocked(apiClient.get).mockImplementation(async (url: string, config) => {
+      if (url === '/opportunities') {
+        const chain = (config?.params as { kind?: string } | undefined)?.kind === 'chain'
+        const items = chain ? [VIA_KZT] : []
+        return { data: { count: items.length, items } }
+      }
+      return { data: { count: 0, items: [] } }
+    })
+    renderPage('/arbitrage?type=chain')
+
+    const row = (await within(list()).findByText('+4,95%')).closest('tr')!
+    expect(within(row).getByText(/UAH → USDT → KZT → USDC → UAH/)).toBeInTheDocument()
+    expect(within(row).getByText(/рахунок у KZT/)).toBeInTheDocument()
+    expect(within(row).getByText('UAH за USDT')).toBeInTheDocument()
+    expect(within(row).getByText('UAH за USDC')).toBeInTheDocument()
+
+    await userEvent.click(row)
+    const panel = details()
+    expect(within(panel).getByLabelText('Маршрут грошей')).toHaveTextContent(
+      'UAH→USDT→KZT→USDC→UAH',
+    )
+    expect(within(panel).getByText(/Купити USDT за UAH · Bybit P2P/)).toBeInTheDocument()
+    expect(
+      within(panel).getByText(
+        (text) => plain(text) === 'Віддаєте 20 000,00 ₴ → отримуєте 426,89 USDT',
+      ),
+    ).toBeInTheDocument()
+    expect(within(panel).getByText(/Продати USDT за KZT/)).toBeInTheDocument()
+    expect(
+      within(panel).getByText((text) =>
+        plain(text).startsWith('Віддаєте 426,89 USDT → отримуєте 218 079,98'),
+      ),
+    ).toBeInTheDocument()
+    expect(within(panel).getAllByText('інша валюта · KZT')).toHaveLength(2)
+    expect(
+      within(panel).getByText(/Потрібні банківські рахунки у валютах: .*(KZT)/),
+    ).toBeInTheDocument()
+
+    await userEvent.click(screen.getByLabelText('Лише в UAH'))
+    expect(await screen.findByRole('tab', { name: 'Ланцюжки · 0' })).toBeInTheDocument()
   })
 
   it('знята біржа прибирає її маршрути', async () => {

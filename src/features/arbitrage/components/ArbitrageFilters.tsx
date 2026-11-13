@@ -25,6 +25,7 @@ interface ArbitrageFiltersProps {
   thresholds: Thresholds
   onMinVolumeChange: (value: number | null) => void
   onLiquidOnlyChange: (value: boolean) => void
+  onSingleFiatChange: (value: boolean) => void
   onReset: () => void
 }
 
@@ -36,6 +37,7 @@ export function ArbitrageFilters({
   thresholds,
   onMinVolumeChange,
   onLiquidOnlyChange,
+  onSingleFiatChange,
   onReset,
 }: ArbitrageFiltersProps) {
   const id = useId()
@@ -129,6 +131,21 @@ export function ArbitrageFilters({
         />
         <label htmlFor={`${id}-liquid`} className="cursor-pointer text-ui text-muted-foreground">
           Тільки ліквідні
+        </label>
+      </div>
+
+      <div className="flex h-7 items-center gap-2">
+        <Switch
+          id={`${id}-single-fiat`}
+          checked={thresholds.singleFiat ?? false}
+          onCheckedChange={onSingleFiatChange}
+        />
+        <label
+          htmlFor={`${id}-single-fiat`}
+          className="cursor-pointer text-ui text-muted-foreground"
+          title="Сховати ланцюжки, для яких потрібен банківський рахунок в іншій валюті"
+        >
+          Лише в {fiat}
         </label>
       </div>
 
