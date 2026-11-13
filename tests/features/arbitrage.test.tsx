@@ -133,11 +133,12 @@ function historyItem(
   base: OpportunityItem,
   startedMinutesAgo: number,
   durationSec: number,
+  id: number,
 ): OpportunityHistoryItem {
-  return { ...base, detected_at: ago(startedMinutesAgo), duration_sec: durationSec }
+  return { ...base, id, detected_at: ago(startedMinutesAgo), duration_sec: durationSec }
 }
 
-const HISTORY = [historyItem(CROSS, 42, 42 * 60), historyItem(SPREAD, 120, 600)]
+const HISTORY = [historyItem(CROSS, 42, 42 * 60, 1), historyItem(SPREAD, 120, 600, 2)]
 
 const DEAL = {
   deal: {

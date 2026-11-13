@@ -6,12 +6,12 @@ import type { ForecastHorizon, ForecastSide } from '@/shared/api/forecast-types'
 import type { HistoryResponse } from '@/shared/api/types'
 
 import alertRulesJson from './fixtures/alert-rules.json'
-import communityPostsJson from './fixtures/community-posts.json'
 import forecastModelsJson from './fixtures/forecast-models.json'
 import notificationsJson from './fixtures/notifications.json'
 import watchlistJson from './fixtures/watchlist.json'
 import { MIN_POINTS, trendForecast, type PricePoint } from './forecast-model'
 import { chat, getConversation, listConversations } from './assistant'
+import { communityHandlers } from './community'
 import type { AlertRule, AlertRuleInput } from './types'
 
 const url = (path: string) => `*/api/v1${path}`
@@ -140,8 +140,5 @@ export const handlers = [
     return response ? HttpResponse.json(response) : detail('Розмову не знайдено', 404)
   }),
 
-  http.get(url(endpoints.communityPosts), async () => {
-    await delay(LATENCY_MS)
-    return HttpResponse.json(communityPostsJson)
-  }),
+  ...communityHandlers,
 ]

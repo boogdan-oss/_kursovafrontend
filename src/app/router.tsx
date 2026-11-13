@@ -12,6 +12,7 @@ import { ProfilePage } from '@/features/auth/ProfilePage'
 import { RegisterPage } from '@/features/auth/RegisterPage'
 import { CalculatorPage } from '@/features/calculator/CalculatorPage'
 import { CommunityPage } from '@/features/community/CommunityPage'
+import { UserProfilePage } from '@/features/community/UserProfilePage'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
 import { OffersPage } from '@/features/offers/OffersPage'
 
@@ -27,6 +28,7 @@ export const routes: RouteObject[] = [
       { path: 'assistant', element: <AssistantPage /> },
       { path: 'alerts', element: <AlertsPage /> },
       { path: 'community', element: <CommunityPage /> },
+      { path: 'community/u/:username', element: <UserProfilePage /> },
       { path: 'profile', element: <ProfilePage /> },
       { path: '*', element: <NotFoundPage /> },
     ],

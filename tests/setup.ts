@@ -50,3 +50,12 @@ vi.mock('lightweight-charts', () => {
     ColorType: { Solid: 'solid' },
   }
 })
+
+if (typeof globalThis.ResizeObserver === 'undefined') {
+  class ResizeObserverStub {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+  vi.stubGlobal('ResizeObserver', ResizeObserverStub)
+}

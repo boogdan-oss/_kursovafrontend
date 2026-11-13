@@ -554,10 +554,395 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/community/feed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Стрічка спільноти (FR-31)
+         * @description sort=new — публікації й репости, новіші першими; sort=popular — публікації за 7 днів за балами (лайк 1, коментар 2, репост 3). scope=mine — лише мої публікації й репости (потрібен вхід). asset + fiat — лише публікації з цією парою.
+         */
+        get: operations["get_feed_api_v1_community_feed_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/community/trending-pairs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Найобговорюваніші пари
+         * @description Пари з видимих публікацій за період. change_pct — зміна ціни купівлі за той самий період, середня по біржах; null — немає даних.
+         */
+        get: operations["trending_pairs_api_v1_community_trending_pairs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/community/posts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Нова публікація (FR-32, FR-42) */
+        post: operations["create_post_api_v1_community_posts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/community/posts/{post_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Публікація */
+        get: operations["get_post_api_v1_community_posts__post_id__get"];
+        put?: never;
+        post?: never;
+        /** Видалити свою (FR-34) */
+        delete: operations["delete_post_api_v1_community_posts__post_id__delete"];
+        options?: never;
+        head?: never;
+        /** Редагувати свою (FR-33) */
+        patch: operations["edit_post_api_v1_community_posts__post_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/community/posts/{post_id}/like": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Лайк (FR-35) */
+        put: operations["like_api_v1_community_posts__post_id__like_put"];
+        post?: never;
+        /** Скасувати лайк */
+        delete: operations["unlike_api_v1_community_posts__post_id__like_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/community/posts/{post_id}/repost": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Репост (FR-38) */
+        put: operations["repost_api_v1_community_posts__post_id__repost_put"];
+        post?: never;
+        /** Скасувати репост (FR-39) */
+        delete: operations["unrepost_api_v1_community_posts__post_id__repost_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/community/posts/{post_id}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Коментарі, старші першими */
+        get: operations["list_comments_api_v1_community_posts__post_id__comments_get"];
+        put?: never;
+        /** Коментар (FR-36) */
+        post: operations["add_comment_api_v1_community_posts__post_id__comments_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/community/comments/{comment_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Видалити свій (FR-37) */
+        delete: operations["delete_comment_api_v1_community_comments__comment_id__delete"];
+        options?: never;
+        head?: never;
+        /** Редагувати свій (FR-37) */
+        patch: operations["edit_comment_api_v1_community_comments__comment_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/community/users/{username}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Профіль користувача (FR-40)
+         * @description Без email. Адміністратор бачить ще чинне блокування (ban_until, ban_reason).
+         */
+        get: operations["get_profile_api_v1_community_users__username__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/community/users/{username}/feed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Публікації, репости або вподобане користувача (FR-40) */
+        get: operations["get_user_feed_api_v1_community_users__username__feed_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/community/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Скарга на публікацію чи коментар (FR-43)
+         * @description Повторна скарга на ту саму ціль, поки попередня на розгляді, — 409.
+         */
+        post: operations["create_report_api_v1_community_reports_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Лічильники модерації */
+        get: operations["stats_api_v1_admin_stats_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Скарги, новіші першими (FR-44) */
+        get: operations["list_reports_api_v1_admin_reports_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/reports/{report_id}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Рішення за скаргою
+         * @description Рішення стосується цілі, тож закриває всі відкриті скарги на неї.
+         */
+        post: operations["resolve_report_api_v1_admin_reports__report_id__resolve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/posts/{post_id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Приховати, видалити чи відновити публікацію (FR-44, FR-46) */
+        put: operations["set_post_status_api_v1_admin_posts__post_id__status_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/comments/{comment_id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Приховати, видалити чи відновити коментар (FR-44, FR-46) */
+        put: operations["set_comment_status_api_v1_admin_comments__comment_id__status_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/hidden": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Приховане модерацією */
+        get: operations["hidden_api_v1_admin_hidden_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/bans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Блокування (FR-45) */
+        get: operations["list_bans_api_v1_admin_bans_get"];
+        put?: never;
+        /**
+         * Заблокувати користувача (FR-45)
+         * @description days — тимчасово (статус suspended, знімається сам), null — назавжди (banned). Нове блокування замінює чинне; усі сесії користувача відкликаються.
+         */
+        post: operations["ban_user_api_v1_admin_bans_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/bans/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Розблокувати користувача */
+        delete: operations["unban_user_api_v1_admin_bans__user_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * AttachedOpportunity
+         * @description Знімок прикріпленої можливості з історії (FR-42).
+         */
+        AttachedOpportunity: {
+            /** Id */
+            id: number;
+            /** Kind */
+            kind: string;
+            /** Asset */
+            asset: string;
+            /** Fiat */
+            fiat: string;
+            /** Buy Exchange */
+            buy_exchange: string;
+            /** Sell Exchange */
+            sell_exchange: string;
+            /** Buy Price */
+            buy_price: string;
+            /** Sell Price */
+            sell_price: string;
+            /** Spread Pct */
+            spread_pct: string;
+            /** Net Spread Pct */
+            net_spread_pct: string;
+            /** Estimated Profit */
+            estimated_profit: string;
+            /** Ai Score */
+            ai_score: number | null;
+            /**
+             * Detected At
+             * Format: date-time
+             */
+            detected_at: string;
+            /** Duration Sec */
+            duration_sec: number | null;
+        };
         /** AuthResponse */
         AuthResponse: {
             /** Access Token */
@@ -578,6 +963,55 @@ export interface components {
             /** Refresh Expires In */
             refresh_expires_in: number;
             user: components["schemas"]["UserOut"];
+        };
+        /** Author */
+        Author: {
+            /** Id */
+            id: number;
+            /** Username */
+            username: string;
+            /**
+             * Is Admin
+             * @default false
+             */
+            is_admin: boolean;
+        };
+        /** BanIn */
+        BanIn: {
+            /** User Id */
+            user_id: number;
+            /**
+             * Days
+             * @description null — назавжди
+             */
+            days?: number | null;
+            /** Reason */
+            reason: string;
+        };
+        /** BanView */
+        BanView: {
+            /** Id */
+            id: number;
+            user: components["schemas"]["Author"];
+            /** Reason */
+            reason: string;
+            /** Until */
+            until: string | null;
+            banned_by: components["schemas"]["Author"] | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Lifted At */
+            lifted_at: string | null;
+        };
+        /** BansResponse */
+        BansResponse: {
+            /** Count */
+            count: number;
+            /** Items */
+            items: components["schemas"]["BanView"][];
         };
         /** CalculatorRequest */
         CalculatorRequest: {
@@ -728,6 +1162,40 @@ export interface components {
             /** Merchants */
             merchants: number;
         };
+        /** CommentIn */
+        CommentIn: {
+            /** Text */
+            text: string;
+        };
+        /** CommentView */
+        CommentView: {
+            /** Id */
+            id: number;
+            /** Post Id */
+            post_id: number;
+            author: components["schemas"]["Author"];
+            /** Text */
+            text: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "visible" | "hidden" | "deleted";
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Updated At */
+            updated_at: string | null;
+        };
+        /** CommentsResponse */
+        CommentsResponse: {
+            /** Count */
+            count: number;
+            /** Items */
+            items: components["schemas"]["CommentView"][];
+        };
         /** ComponentHealth */
         ComponentHealth: {
             /**
@@ -738,6 +1206,11 @@ export interface components {
             /** Detail */
             detail?: string | null;
         };
+        /**
+         * ContentStatus
+         * @enum {string}
+         */
+        ContentStatus: "visible" | "hidden" | "deleted";
         /**
          * Deal
          * @description Розрахунок угоди на суму інвестиції (FR-08, FR-18).
@@ -800,6 +1273,29 @@ export interface components {
             limiter_state: string | null;
         };
         /**
+         * FeedItem
+         * @description Елемент стрічки: публікація або її репост (reposted_by — хто поділився).
+         */
+        FeedItem: {
+            post: components["schemas"]["PostView"];
+            reposted_by: components["schemas"]["Author"] | null;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+        };
+        /** FeedPage */
+        FeedPage: {
+            /** Items */
+            items: components["schemas"]["FeedItem"][];
+            /**
+             * Next Cursor
+             * @description null — сторінок більше немає
+             */
+            next_cursor: string | null;
+        };
+        /**
          * Freshness
          * @description Наскільки актуальні дані пари на біржі.
          */
@@ -848,6 +1344,13 @@ export interface components {
             };
             /** Exchanges */
             exchanges: components["schemas"]["ExchangeHealth"][];
+        };
+        /** HiddenResponse */
+        HiddenResponse: {
+            /** Posts */
+            posts: components["schemas"]["PostView"][];
+            /** Comments */
+            comments: components["schemas"]["CommentView"][];
         };
         /** HistoryItem */
         HistoryItem: {
@@ -1010,6 +1513,22 @@ export interface components {
             orders_30d: number;
             /** Completion Rate */
             completion_rate: string;
+        };
+        /**
+         * ModerationStats
+         * @description Лічильники для панелі модерації (FR-44 – FR-46).
+         */
+        ModerationStats: {
+            /** Reports New */
+            reports_new: number;
+            /** Reports Pending */
+            reports_pending: number;
+            /** Hidden */
+            hidden: number;
+            /** Deleted 7D */
+            deleted_7d: number;
+            /** Banned */
+            banned: number;
         };
         /** NotificationOut */
         NotificationOut: {
@@ -1201,6 +1720,11 @@ export interface components {
             detected_at: string;
             /** Ai Category */
             ai_category?: string | null;
+            /**
+             * Id
+             * @description Ідентифікатор запису; його прикріплюють до публікації (FR-42)
+             */
+            id: number;
             /** Duration Sec */
             duration_sec: number | null;
         };
@@ -1258,6 +1782,20 @@ export interface components {
             /** Ai Category */
             ai_category?: string | null;
         };
+        /** PairIn */
+        PairIn: {
+            /** Asset */
+            asset: string;
+            /** Fiat */
+            fiat: string;
+        };
+        /** PairRef */
+        PairRef: {
+            /** Asset */
+            asset: string;
+            /** Fiat */
+            fiat: string;
+        };
         /** PingResponse */
         PingResponse: {
             /** Message */
@@ -1267,6 +1805,93 @@ export interface components {
              * Format: date-time
              */
             time: string;
+        };
+        /** PostIn */
+        PostIn: {
+            /** Text */
+            text: string;
+            /** @description Прикріплена пара (FR-42) */
+            pair?: components["schemas"]["PairIn"] | null;
+            /**
+             * Opportunity Id
+             * @description id з /opportunities/history (FR-42)
+             */
+            opportunity_id?: number | null;
+        };
+        /**
+         * PostPatch
+         * @description Змінюються лише передані поля; null для pair чи opportunity_id прибирає прикріплення.
+         */
+        PostPatch: {
+            /** Text */
+            text?: string | null;
+            pair?: components["schemas"]["PairIn"] | null;
+            /** Opportunity Id */
+            opportunity_id?: number | null;
+        };
+        /**
+         * PostView
+         * @description Публікація з лічильниками (FR-41) і тим, що з нею зробив поточний користувач.
+         */
+        PostView: {
+            /** Id */
+            id: number;
+            author: components["schemas"]["Author"];
+            /** Text */
+            text: string;
+            pair: components["schemas"]["PairRef"] | null;
+            opportunity: components["schemas"]["AttachedOpportunity"] | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "visible" | "hidden" | "deleted";
+            /** Likes */
+            likes: number;
+            /** Comments */
+            comments: number;
+            /** Reposts */
+            reposts: number;
+            /** Liked By Me */
+            liked_by_me: boolean;
+            /** Reposted By Me */
+            reposted_by_me: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Updated At */
+            updated_at: string | null;
+        };
+        /**
+         * ProfileView
+         * @description Публічний профіль (FR-40): без email і налаштувань.
+         */
+        ProfileView: {
+            /** Id */
+            id: number;
+            /** Username */
+            username: string;
+            /** Is Admin */
+            is_admin: boolean;
+            /** Status */
+            status: string;
+            /**
+             * Joined At
+             * Format: date-time
+             */
+            joined_at: string;
+            /** Posts */
+            posts: number;
+            /** Likes Received */
+            likes_received: number;
+            /** Reposts Received */
+            reposts_received: number;
+            /** Ban Until */
+            ban_until?: string | null;
+            /** Ban Reason */
+            ban_reason?: string | null;
         };
         /** RefreshRequest */
         RefreshRequest: {
@@ -1284,6 +1909,83 @@ export interface components {
             email: string;
             /** Password */
             password: string;
+        };
+        /** ReportIn */
+        ReportIn: {
+            /** Post Id */
+            post_id?: number | null;
+            /** Comment Id */
+            comment_id?: number | null;
+            /**
+             * Reason
+             * @enum {string}
+             */
+            reason: "spam" | "scam" | "abuse" | "misinformation" | "other";
+            /** Details */
+            details?: string | null;
+        };
+        /**
+         * ReportStatus
+         * @enum {string}
+         */
+        ReportStatus: "pending" | "resolved" | "rejected";
+        /** ReportView */
+        ReportView: {
+            /** Id */
+            id: number;
+            /**
+             * Target
+             * @enum {string}
+             */
+            target: "post" | "comment";
+            /** Post Id */
+            post_id: number;
+            /** Comment Id */
+            comment_id: number | null;
+            /** Target Text */
+            target_text: string;
+            /**
+             * Target Status
+             * @enum {string}
+             */
+            target_status: "visible" | "hidden" | "deleted";
+            target_author: components["schemas"]["Author"];
+            reporter: components["schemas"]["Author"];
+            /**
+             * Reason
+             * @enum {string}
+             */
+            reason: "spam" | "scam" | "abuse" | "misinformation" | "other";
+            /** Details */
+            details: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "resolved" | "rejected";
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Resolved At */
+            resolved_at: string | null;
+        };
+        /** ReportsResponse */
+        ReportsResponse: {
+            /** Count */
+            count: number;
+            /** Items */
+            items: components["schemas"]["ReportView"][];
+        };
+        /** ResolveIn */
+        ResolveIn: {
+            /**
+             * Action
+             * @description hide / delete — змінити статус цілі (скарги підтверджено), dismiss — відхилити
+             * @enum {string}
+             */
+            action: "hide" | "delete" | "dismiss";
         };
         /** RuleIn */
         RuleIn: {
@@ -1425,6 +2127,11 @@ export interface components {
             /** Items */
             items: components["schemas"]["MarketSnapshot"][];
         };
+        /** StatusIn */
+        StatusIn: {
+            /** @description visible — відновити (FR-46) */
+            status: components["schemas"]["ContentStatus"];
+        };
         /**
          * Step
          * @description Один крок угоди; для ланцюжків — усі кроки по черзі.
@@ -1488,6 +2195,29 @@ export interface components {
             url: string;
             /** Expires In */
             expires_in: number;
+        };
+        /**
+         * TrendingPair
+         * @description Пара, яку найбільше обговорюють у видимих публікаціях за період.
+         */
+        TrendingPair: {
+            /** Asset */
+            asset: string;
+            /** Fiat */
+            fiat: string;
+            /** Posts */
+            posts: number;
+            /** Likes */
+            likes: number;
+            /** Comments */
+            comments: number;
+            /** Change Pct */
+            change_pct?: string | null;
+        };
+        /** TrendingResponse */
+        TrendingResponse: {
+            /** Items */
+            items: components["schemas"]["TrendingPair"][];
         };
         /** UserOut */
         UserOut: {
@@ -2552,6 +3282,842 @@ export interface operations {
                     "application/json": unknown;
                     "text/event-stream": unknown;
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_feed_api_v1_community_feed_get: {
+        parameters: {
+            query?: {
+                sort?: "new" | "popular";
+                scope?: "all" | "mine";
+                asset?: string | null;
+                fiat?: string | null;
+                /** @description next_cursor з попередньої сторінки, як є */
+                cursor?: string | null;
+                /** @description Скільки елементів на сторінці */
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeedPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    trending_pairs_api_v1_community_trending_pairs_get: {
+        parameters: {
+            query?: {
+                hours?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrendingResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_post_api_v1_community_posts_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PostView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_post_api_v1_community_posts__post_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                post_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PostView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_post_api_v1_community_posts__post_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                post_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    edit_post_api_v1_community_posts__post_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                post_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PostView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    like_api_v1_community_posts__post_id__like_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                post_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PostView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unlike_api_v1_community_posts__post_id__like_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                post_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PostView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    repost_api_v1_community_posts__post_id__repost_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                post_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PostView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unrepost_api_v1_community_posts__post_id__repost_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                post_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PostView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_comments_api_v1_community_posts__post_id__comments_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                post_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommentsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_comment_api_v1_community_posts__post_id__comments_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                post_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommentIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommentView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_comment_api_v1_community_comments__comment_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                comment_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    edit_comment_api_v1_community_comments__comment_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                comment_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommentIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommentView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_profile_api_v1_community_users__username__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                username: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_user_feed_api_v1_community_users__username__feed_get: {
+        parameters: {
+            query?: {
+                tab?: "posts" | "reposts" | "likes";
+                /** @description next_cursor з попередньої сторінки, як є */
+                cursor?: string | null;
+                /** @description Скільки елементів на сторінці */
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                username: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeedPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_report_api_v1_community_reports_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReportIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    stats_api_v1_admin_stats_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModerationStats"];
+                };
+            };
+        };
+    };
+    list_reports_api_v1_admin_reports_get: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["ReportStatus"] | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resolve_report_api_v1_admin_reports__report_id__resolve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                report_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResolveIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_post_status_api_v1_admin_posts__post_id__status_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                post_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StatusIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PostView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_comment_status_api_v1_admin_comments__comment_id__status_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                comment_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StatusIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommentView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    hidden_api_v1_admin_hidden_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HiddenResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_bans_api_v1_admin_bans_get: {
+        parameters: {
+            query?: {
+                active?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BansResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ban_user_api_v1_admin_bans_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BanIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BanView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unban_user_api_v1_admin_bans__user_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
