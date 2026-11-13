@@ -6,6 +6,7 @@ import { NotFoundPage } from '@/app/NotFoundPage'
 import { AlertsPage } from '@/features/alerts/AlertsPage'
 import { ArbitragePage } from '@/features/arbitrage/ArbitragePage'
 import { AssistantPage } from '@/features/assistant/AssistantPage'
+import { GoogleCallbackPage } from '@/features/auth/GoogleCallbackPage'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { ProfilePage } from '@/features/auth/ProfilePage'
 import { RegisterPage } from '@/features/auth/RegisterPage'
@@ -35,6 +36,7 @@ export const routes: RouteObject[] = [
     children: [
       { path: 'login', element: <LoginPage /> },
       { path: 'register', element: <RegisterPage /> },
+      { path: 'auth/google/callback', element: <GoogleCallbackPage /> },
     ],
   },
 ]

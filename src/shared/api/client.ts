@@ -123,7 +123,7 @@ export const apiClient = axios.create({
 const AUTH_PATHS = [
   '/auth/login',
   '/auth/register',
-  '/auth/google',
+  '/auth/google/exchange',
   '/auth/refresh',
   '/auth/logout',
 ]

@@ -131,14 +131,12 @@ function GoogleLogo() {
 }
 
 interface GoogleButtonProps {
-  configured: boolean
-  ready: boolean
-  pending: boolean
+  href: string
   error: string | null
-  onClick: () => void
+  onClick?: () => void
 }
 
-export function GoogleButton({ configured, ready, pending, error, onClick }: GoogleButtonProps) {
+export function GoogleButton({ href, error, onClick }: GoogleButtonProps) {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-3 text-meta uppercase text-tertiary" aria-hidden>
@@ -147,20 +145,12 @@ export function GoogleButton({ configured, ready, pending, error, onClick }: Goo
         <span className="h-px flex-1 bg-border" />
       </div>
       {error && <FormError>{error}</FormError>}
-      <Button
-        type="button"
-        variant="secondary"
-        className="h-[38px] text-ui"
-        disabled={!configured || !ready || pending}
-        title={configured ? undefined : 'Вхід через Google ще не налаштовано'}
-        onClick={onClick}
-      >
-        <GoogleLogo />
-        {pending ? 'Очікуємо Google…' : 'Продовжити з Google'}
+      <Button asChild variant="secondary" className="h-[38px] text-ui">
+        <a href={href} onClick={onClick}>
+          <GoogleLogo />
+          Продовжити з Google
+        </a>
       </Button>
-      {!configured && (
-        <p className="text-center text-meta text-tertiary">Вхід через Google ще не налаштовано</p>
-      )}
     </div>
   )
 }

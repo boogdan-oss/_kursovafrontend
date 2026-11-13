@@ -32,7 +32,7 @@ function write(session: Session | null, remember: boolean) {
     for (const target of [storage(true), storage(false)]) target?.removeItem(STORAGE_KEY)
     if (session) storage(remember)?.setItem(STORAGE_KEY, JSON.stringify(session))
   } catch {
-    // сховище недоступне — сесія житиме до перезавантаження сторінки
+    return
   }
 }
 

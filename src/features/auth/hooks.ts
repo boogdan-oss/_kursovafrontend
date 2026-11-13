@@ -1,16 +1,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useSearchParams } from 'react-router-dom'
 
-import { googleLogin, login, logout, register } from '@/features/auth/api'
-import {
-  GoogleCancelled,
-  googleClientId,
-  loadGoogle,
-  requestGoogleCode,
-} from '@/features/auth/google'
-import { toApiError } from '@/shared/api/client'
-import type { LoginRequest } from '@/shared/api/types'
+import { exchangeGoogleCode, GOOGLE_ERRORS, login, logout, register } from '@/features/auth/api'
+import { safeNext } from '@/features/auth/lib'
+import type { AuthResponse, LoginRequest } from '@/shared/api/types'
 import { useAuthStore } from '@/store/useAuthStore'
 
 export function useLogin() {
@@ -47,46 +40,42 @@ export function useLogout() {
 export function useAuthRedirectTarget() {
   const location = useLocation()
   const from = (location.state as { from?: unknown } | null)?.from
-  return typeof from === 'string' && from.startsWith('/') && !from.startsWith('//') ? from : '/'
+  return safeNext(typeof from === 'string' ? from : null)
 }
 
-type GoogleAccounts = Awaited<ReturnType<typeof loadGoogle>>
+const GOOGLE_REMEMBER_KEY = 'upars-google-remember'
 
-export function useGoogleLogin() {
-  const signIn = useAuthStore((state) => state.signIn)
-  const clientId = googleClientId()
-  const [accounts, setAccounts] = useState<GoogleAccounts | null>(null)
-  const [loadError, setLoadError] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!clientId) return
-    let active = true
-    loadGoogle()
-      .then((loaded) => active && setAccounts(loaded))
-      .catch((error: Error) => active && setLoadError(error.message))
-    return () => {
-      active = false
-    }
-  }, [clientId])
-
-  const mutation = useMutation({
-    mutationFn: async ({ code }: { code: Promise<string>; remember: boolean }) =>
-      googleLogin(await code),
-    onSuccess: (response, { remember }) => signIn(response, remember),
-  })
-
-  function start(remember: boolean) {
-    if (!clientId || !accounts || mutation.isPending) return
-    mutation.mutate({ code: requestGoogleCode(accounts, clientId), remember })
+export function rememberForGoogle(remember: boolean) {
+  try {
+    globalThis.sessionStorage.setItem(GOOGLE_REMEMBER_KEY, remember ? '1' : '0')
+  } catch {
+    return
   }
+}
 
-  const cancelled = mutation.error instanceof GoogleCancelled
-  return {
-    configured: clientId !== null,
-    ready: accounts !== null,
-    pending: mutation.isPending,
-    error:
-      loadError ?? (mutation.isError && !cancelled ? toApiError(mutation.error).message : null),
-    start,
+export function takeGoogleRemember() {
+  try {
+    const value = globalThis.sessionStorage.getItem(GOOGLE_REMEMBER_KEY)
+    globalThis.sessionStorage.removeItem(GOOGLE_REMEMBER_KEY)
+    return value !== '0'
+  } catch {
+    return true
   }
+}
+
+const exchanges = new Map<string, Promise<AuthResponse>>()
+
+export function exchangeOnce(code: string) {
+  let pending = exchanges.get(code)
+  if (!pending) {
+    pending = exchangeGoogleCode(code)
+    exchanges.set(code, pending)
+  }
+  return pending
+}
+
+export function useGoogleError() {
+  const [params] = useSearchParams()
+  const code = params.get('error')
+  return code ? (GOOGLE_ERRORS[code] ?? GOOGLE_ERRORS.google_failed) : null
 }

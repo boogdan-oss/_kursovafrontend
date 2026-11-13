@@ -9,7 +9,13 @@ import {
   GoogleButton,
   PasswordStrength,
 } from '@/features/auth/components/AuthForm'
-import { useAuthRedirectTarget, useGoogleLogin, useRegister } from '@/features/auth/hooks'
+import { googleStartUrl } from '@/features/auth/api'
+import {
+  rememberForGoogle,
+  useAuthRedirectTarget,
+  useGoogleError,
+  useRegister,
+} from '@/features/auth/hooks'
 import { validateRegistration, type RegisterField } from '@/features/auth/validation'
 import { toApiError } from '@/shared/api/client'
 import { Button } from '@/shared/ui/button'
@@ -27,7 +33,7 @@ export function RegisterPage() {
   const [agreed, setAgreed] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const mutation = useRegister()
-  const google = useGoogleLogin()
+  const googleError = useGoogleError()
   const session = useAuthStore((state) => state.session)
   const target = useAuthRedirectTarget()
 
@@ -108,11 +114,9 @@ export function RegisterPage() {
       </form>
       <div className="mt-5">
         <GoogleButton
-          configured={google.configured}
-          ready={google.ready}
-          pending={google.pending}
-          error={google.error}
-          onClick={() => google.start(true)}
+          href={googleStartUrl(target)}
+          error={googleError}
+          onClick={() => rememberForGoogle(true)}
         />
       </div>
     </AuthCard>

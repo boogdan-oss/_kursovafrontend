@@ -313,6 +313,48 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/google/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Вхід через Google: перехід на вибір облікового запису
+         * @description Відкривати в браузері (посилання або window.location), не через fetch. Перекидає на Google з вибором облікового запису; після вибору браузер повертається на фронтенд /auth/google/callback?code=...&next=..., а code обмінюється на токени через POST /auth/google/exchange. Помилки — /login?error=google_disabled | google_denied | google_state | google_unverified | account_blocked | google_failed.
+         *
+         *     origin — адреса фронтенду, куди повернутись (лише з CORS_ORIGINS); next — шлях на сайті після входу.
+         */
+        get: operations["google_start_api_v1_auth_google_start_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/google/exchange": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Обмін одноразового коду після входу через Google на токени
+         * @description Код живе 60 секунд і спрацьовує один раз.
+         */
+        post: operations["google_exchange_api_v1_auth_google_exchange_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/me": {
         parameters: {
             query?: never;
@@ -488,6 +530,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/ai/chat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * AI-асистент (Claude): відповідь потоком SSE
+         * @description Асистент відповідає про P2P-ринок на живих даних сервісу: ціни бірж, оголошення, арбітражні можливості, калькулятор угоди, історію цін. Цифри бере лише з інструментів.
+         *
+         *     Відповідь — text/event-stream з подіями: text {text} — шматок відповіді; tool {name, input} — асистент перевіряє дані; done {model, stop_reason, токени}; error {detail}. Розмову зберігає клієнт і щоразу надсилає її повністю.
+         *
+         *     Потрібен вхід; не більше ASSISTANT_MESSAGES_PER_HOUR запитів на годину (429).
+         */
+        post: operations["assistant_chat_api_v1_ai_chat_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -589,6 +655,24 @@ export interface components {
             current_password: string;
             /** New Password */
             new_password: string;
+        };
+        /** ChatMessage */
+        ChatMessage: {
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "user" | "assistant";
+            /** Content */
+            content: string;
+        };
+        /** ChatRequest */
+        ChatRequest: {
+            /**
+             * Messages
+             * @description Уся розмова, старші першими; останнє повідомлення — від user
+             */
+            messages: components["schemas"]["ChatMessage"][];
         };
         /**
          * CollectorStatus
@@ -733,6 +817,11 @@ export interface components {
              * @default true
              */
             stale: boolean;
+        };
+        /** GoogleExchangeRequest */
+        GoogleExchangeRequest: {
+            /** Code */
+            code: string;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -1376,6 +1465,8 @@ export interface components {
             status: components["schemas"]["UserStatus"];
             /** Telegram Connected */
             telegram_connected: boolean;
+            /** Google Connected */
+            google_connected: boolean;
             settings: components["schemas"]["UserSettings-Output"];
             /**
              * Created At
@@ -1983,6 +2074,69 @@ export interface operations {
             };
         };
     };
+    google_start_api_v1_auth_google_start_get: {
+        parameters: {
+            query?: {
+                origin?: string | null;
+                next?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            302: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    google_exchange_api_v1_auth_google_exchange_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GoogleExchangeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     me_api_v1_me_get: {
         parameters: {
             query?: never;
@@ -2325,6 +2479,40 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MarkReadResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    assistant_chat_api_v1_ai_chat_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChatRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                    "text/event-stream": unknown;
                 };
             };
             /** @description Validation Error */

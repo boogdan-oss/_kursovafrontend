@@ -1,9 +1,10 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import axios, { AxiosError, type AxiosAdapter, type InternalAxiosRequestConfig } from 'axios'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 
 import { Providers } from '@/app/providers'
+import { GoogleCallbackPage } from '@/features/auth/GoogleCallbackPage'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { RegisterPage } from '@/features/auth/RegisterPage'
 import { passwordScore, validateRegistration } from '@/features/auth/validation'
@@ -27,6 +28,7 @@ function authResponse(token = 'access-1', refresh = 'refresh-1'): AuthResponse {
       role: 'user',
       status: 'active',
       telegram_connected: false,
+      google_connected: false,
       settings: {},
       created_at: '2026-11-12T10:00:00Z',
     },
@@ -34,15 +36,17 @@ function authResponse(token = 'access-1', refresh = 'refresh-1'): AuthResponse {
 }
 
 function renderAuth(path: string, state?: unknown) {
+  const [pathname, search = ''] = path.split('?')
   render(
     <Providers>
       <MemoryRouter
-        initialEntries={[{ pathname: path, state }]}
+        initialEntries={[{ pathname, search: search && `?${search}`, state }]}
         future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
       >
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
           <Route path="/" element={<p>Головна сторінка</p>} />
           <Route path="/arbitrage" element={<p>Сторінка арбітражу</p>} />
         </Routes>
@@ -263,77 +267,58 @@ describe('токени в API-клієнті', () => {
 })
 
 describe('вхід через Google', () => {
-  type CodeConfig = {
-    client_id: string
-    callback: (response: { code?: string; error?: string }) => void
-    error_callback?: (error: { type: string }) => void
+  function googleLink() {
+    return screen.getByRole('link', { name: /Продовжити з Google/ })
   }
 
-  function mockGoogle(respond: (config: CodeConfig) => void) {
-    const initCodeClient = vi.fn((config: CodeConfig) => ({
-      requestCode: () => respond(config),
-    }))
-    window.google = { accounts: { oauth2: { initCodeClient } } } as unknown as Window['google']
-    return initCodeClient
-  }
-
-  afterEach(() => {
-    vi.unstubAllEnvs()
-    delete window.google
-  })
-
-  it('без Client ID кнопка неактивна', () => {
-    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', '')
-    renderAuth('/login')
-    expect(screen.getByRole('button', { name: /Продовжити з Google/ })).toBeDisabled()
-    expect(screen.getByText('Вхід через Google ще не налаштовано')).toBeInTheDocument()
-  })
-
-  it('код від Google обмінюється на сесію', async () => {
-    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'client-123')
-    const init = mockGoogle((config) => config.callback({ code: 'google-code' }))
-    const post = vi.spyOn(apiClient, 'post').mockResolvedValue({ data: authResponse('g-access') })
+  it('кнопка веде на бекенд з адресою повернення й сторінкою після входу', () => {
     renderAuth('/register', { from: '/arbitrage' })
+    const url = new URL(googleLink().getAttribute('href')!, 'http://localhost')
+    expect(url.pathname).toBe('/api/v1/auth/google/start')
+    expect(url.searchParams.get('origin')).toBe(window.location.origin)
+    expect(url.searchParams.get('next')).toBe('/arbitrage')
+  })
 
-    const button = await screen.findByRole('button', { name: /Продовжити з Google/ })
-    await waitFor(() => expect(button).toBeEnabled())
-    await userEvent.click(button)
+  it('запам’ятовує вибір «Запам’ятати мене» до повернення з Google', async () => {
+    renderAuth('/login')
+    await userEvent.click(screen.getByText('Запам’ятати мене'))
+    googleLink().addEventListener('click', (event) => event.preventDefault())
+    await userEvent.click(googleLink())
+    expect(sessionStorage.getItem('upars-google-remember')).toBe('0')
+  })
+
+  it('помилка з бекенду показується на сторінці входу', () => {
+    renderAuth('/login?error=account_blocked')
+    expect(screen.getByRole('alert')).toHaveTextContent('Акаунт заблоковано або призупинено.')
+  })
+
+  it('одноразовий код обмінюється на сесію й веде на next', async () => {
+    sessionStorage.setItem('upars-google-remember', '0')
+    const post = vi.spyOn(apiClient, 'post').mockResolvedValue({ data: authResponse('g-access') })
+    renderAuth('/auth/google/callback?code=login-code&next=/arbitrage')
 
     expect(await screen.findByText('Сторінка арбітражу')).toBeInTheDocument()
-    expect(init).toHaveBeenCalledWith(
-      expect.objectContaining({ client_id: 'client-123', ux_mode: 'popup' }),
-    )
-    expect(post).toHaveBeenCalledWith('/auth/google', { code: 'google-code' })
+    expect(post).toHaveBeenCalledWith('/auth/google/exchange', { code: 'login-code' })
     expect(useAuthStore.getState().session?.accessToken).toBe('g-access')
+    expect(useAuthStore.getState().remember).toBe(false)
+    expect(sessionStorage.getItem('upars-google-remember')).toBeNull()
   })
 
-  it('закрите вікно Google не показує помилку', async () => {
-    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'client-123')
-    mockGoogle((config) => config.error_callback?.({ type: 'popup_closed' }))
-    const post = vi.spyOn(apiClient, 'post')
-    renderAuth('/login')
-
-    const button = screen.getByRole('button', { name: /Продовжити з Google/ })
-    await waitFor(() => expect(button).toBeEnabled())
-    await userEvent.click(button)
-
-    await waitFor(() => expect(button).toBeEnabled())
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
-    expect(post).not.toHaveBeenCalled()
+  it('чужий next не виводить за межі сайту', async () => {
+    vi.spyOn(apiClient, 'post').mockResolvedValue({ data: authResponse('g-2') })
+    renderAuth('/auth/google/callback?code=login-code-2&next=//evil.example')
+    expect(await screen.findByText('Головна сторінка')).toBeInTheDocument()
   })
 
-  it('помилка сервера після Google видна користувачу', async () => {
-    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'client-123')
-    mockGoogle((config) => config.callback({ code: 'google-code' }))
+  it('без коду або з простроченим кодом пропонує спробувати ще раз', async () => {
     vi.spyOn(apiClient, 'post').mockRejectedValue(
-      new ApiError('Вхід через Google не налаштовано на сервері', { status: 503 }),
+      new ApiError('Код входу недійсний або вже використаний', { status: 401 }),
     )
-    renderAuth('/login')
-
-    const button = screen.getByRole('button', { name: /Продовжити з Google/ })
-    await waitFor(() => expect(button).toBeEnabled())
-    await userEvent.click(button)
-
-    expect(await screen.findByRole('alert')).toHaveTextContent('не налаштовано на сервері')
+    renderAuth('/auth/google/callback?code=used-code')
+    expect(await screen.findByRole('alert')).toHaveTextContent('Код входу недійсний')
+    expect(screen.getByRole('link', { name: 'Спробувати ще раз' })).toHaveAttribute(
+      'href',
+      '/login',
+    )
   })
 })
