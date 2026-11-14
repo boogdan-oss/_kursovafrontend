@@ -1,10 +1,25 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useEffect } from 'react'
 import { useLocation, useSearchParams } from 'react-router-dom'
 
-import { exchangeGoogleCode, GOOGLE_ERRORS, login, logout, register } from '@/features/auth/api'
+import {
+  changePassword,
+  createTelegramLink,
+  exchangeGoogleCode,
+  fetchMe,
+  GOOGLE_ERRORS,
+  login,
+  logout,
+  register,
+  unlinkTelegram,
+  updateProfile,
+  updateSettings,
+} from '@/features/auth/api'
 import { safeNext } from '@/features/auth/lib'
+import { queryKeys } from '@/shared/api/queryKeys'
 import type { AuthResponse, LoginRequest } from '@/shared/api/types'
 import { useAuthStore } from '@/store/useAuthStore'
+import { useFiltersStore } from '@/store/useFiltersStore'
 
 export function useLogin() {
   const signIn = useAuthStore((state) => state.signIn)
@@ -78,4 +93,73 @@ export function useGoogleError() {
   const [params] = useSearchParams()
   const code = params.get('error')
   return code ? (GOOGLE_ERRORS[code] ?? GOOGLE_ERRORS.google_failed) : null
+}
+
+export function useMe(enabled = true) {
+  const setUser = useAuthStore((state) => state.setUser)
+  const query = useQuery({
+    queryKey: queryKeys.auth.me(),
+    queryFn: ({ signal }) => fetchMe(signal),
+    enabled,
+  })
+  const { data } = query
+  useEffect(() => {
+    if (data) setUser(data)
+  }, [data, setUser])
+  return query
+}
+
+export function useUpdateProfile() {
+  const client = useQueryClient()
+  const setUser = useAuthStore((state) => state.setUser)
+  return useMutation({
+    mutationFn: updateProfile,
+    onSuccess: (user) => {
+      setUser(user)
+      client.setQueryData(queryKeys.auth.me(), user)
+      void client.invalidateQueries({ queryKey: queryKeys.community.profile(user.username) })
+    },
+  })
+}
+
+export function useUpdateSettings() {
+  const client = useQueryClient()
+  const setUser = useAuthStore((state) => state.setUser)
+  return useMutation({
+    mutationFn: updateSettings,
+    onSuccess: (user) => {
+      setUser(user)
+      client.setQueryData(queryKeys.auth.me(), user)
+      const { default_asset, default_fiat, default_payment, default_investment } = user.settings
+      const filters = useFiltersStore.getState()
+      if (default_asset && default_fiat) filters.setPair(default_asset, default_fiat)
+      if (default_asset && default_fiat) filters.setBank(default_payment ?? null)
+      if (default_investment) filters.setAmount(Number(default_investment))
+    },
+  })
+}
+
+export function useChangePassword() {
+  const queryClient = useQueryClient()
+  const signOut = useAuthStore((state) => state.signOut)
+  return useMutation({
+    mutationFn: ({ current, next }: { current: string; next: string }) =>
+      changePassword(current, next),
+    onSuccess: () => {
+      signOut()
+      queryClient.clear()
+    },
+  })
+}
+
+export function useTelegramLink() {
+  return useMutation({ mutationFn: createTelegramLink })
+}
+
+export function useUnlinkTelegram() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: unlinkTelegram,
+    onSuccess: () => client.invalidateQueries({ queryKey: queryKeys.auth.me() }),
+  })
 }

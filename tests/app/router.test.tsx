@@ -23,7 +23,6 @@ const PAGES: [string, string][] = [
   ['/assistant', 'AI-асистент'],
   ['/alerts', 'Сповіщення та Watchlist'],
   ['/community', 'Спільнота'],
-  ['/profile', 'Налаштування'],
 ]
 
 function AppRoutes() {
@@ -69,6 +68,11 @@ describe('маршрути', () => {
     renderAt('/login')
     expect(screen.getByRole('heading', { level: 1, name: 'Вхід' })).toBeInTheDocument()
     expect(screen.queryByRole('navigation')).not.toBeInTheDocument()
+  })
+
+  it('профіль без входу веде на сторінку входу', () => {
+    renderAt('/profile')
+    expect(screen.getByRole('heading', { level: 1, name: 'Вхід' })).toBeInTheDocument()
   })
 
   it('вкладка «Реєстрація» перемикає на реєстрацію', async () => {

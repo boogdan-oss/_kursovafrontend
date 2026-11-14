@@ -439,6 +439,10 @@ export const communityHandlers = [
         posts: own.length,
         likes_received: own.reduce((sum, post) => sum + post.likes.size, 0),
         reposts_received: own.reduce((sum, post) => sum + post.reposts.size, 0),
+        comments: comments.filter((item) => item.author.id === user.id && item.status === 'visible')
+          .length,
+        display_name: null,
+        bio: null,
       })
     }),
   ),

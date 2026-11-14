@@ -25,6 +25,8 @@ function authResponse(token = 'access-1', refresh = 'refresh-1'): AuthResponse {
       id: 1,
       username: 'bohdan',
       email: 'bohdan@example.com',
+      display_name: null,
+      bio: null,
       role: 'user',
       status: 'active',
       telegram_connected: false,

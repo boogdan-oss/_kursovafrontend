@@ -45,7 +45,7 @@ export function MyProfileCard() {
             <Stat value={profile.data?.reposts_received} label="репостів" />
           </div>
           <Button asChild variant="secondary" size="terminal">
-            <Link to={`/community/u/${user.username}`}>Переглянути профіль</Link>
+            <Link to="/profile">Переглянути профіль</Link>
           </Button>
         </div>
       ) : (

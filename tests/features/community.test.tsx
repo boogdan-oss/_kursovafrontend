@@ -89,6 +89,7 @@ const PROFILE: ProfileView = {
   posts: 12,
   likes_received: 184,
   reposts_received: 9,
+  comments: 4,
 }
 
 function signIn(role: 'user' | 'admin' = 'user') {

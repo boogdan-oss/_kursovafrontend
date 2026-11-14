@@ -39,7 +39,12 @@ export function FeedList({ query, now, empty }: FeedListProps) {
     )
   }
 
-  const items = query.data?.pages.flatMap((page) => page.items) ?? []
+  const seen = new Set<number>()
+  const items = (query.data?.pages.flatMap((page) => page.items) ?? []).filter((item) => {
+    if (seen.has(item.post.id)) return false
+    seen.add(item.post.id)
+    return true
+  })
   if (items.length === 0) {
     return (
       <div className="rounded-sm border bg-card px-4 py-12 text-center text-ui-lg text-muted-foreground">

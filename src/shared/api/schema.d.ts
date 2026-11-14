@@ -369,7 +369,8 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /** Змінити ім'я й опис профілю */
+        patch: operations["patch_profile_api_v1_me_patch"];
         trace?: never;
     };
     "/api/v1/me/settings": {
@@ -540,14 +541,71 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * AI-асистент (Claude): відповідь потоком SSE
-         * @description Асистент відповідає про P2P-ринок на живих даних сервісу: ціни бірж, оголошення, арбітражні можливості, калькулятор угоди, історію цін. Цифри бере лише з інструментів.
+         * Фінансовий AI-асистент (Gemini або Claude): відповідь потоком SSE
+         * @description Асистент відповідає про фінанси й валюти. Живі дані бере лише з інструментів: P2P-ціни бірж, оголошення, арбітражні можливості, калькулятор угоди, історія цін, офіційні курси НБУ. Провайдер — ASSISTANT_PROVIDER (auto: Gemini, якщо задано GEMINI_API_KEY, інакше Claude).
          *
          *     Відповідь — text/event-stream з подіями: text {text} — шматок відповіді; tool {name, input} — асистент перевіряє дані; done {model, stop_reason, токени}; error {detail}. Розмову зберігає клієнт і щоразу надсилає її повністю.
          *
          *     Потрібен вхід; не більше ASSISTANT_MESSAGES_PER_HOUR запитів на годину (429).
          */
         post: operations["assistant_chat_api_v1_ai_chat_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assistant/conversations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Мої розмови */
+        get: operations["list_conversations_api_v1_assistant_conversations_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assistant/conversations/{conversation_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Розмова з повідомленнями */
+        get: operations["get_conversation_api_v1_assistant_conversations__conversation_id__get"];
+        put?: never;
+        post?: never;
+        /** Видалити розмову */
+        delete: operations["delete_conversation_api_v1_assistant_conversations__conversation_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assistant/chat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Повідомлення асистенту: відповідь цілим JSON
+         * @description Той самий фінансовий асистент, що й /ai/chat (Gemini або Claude, живі дані лише з інструментів), але розмова зберігається на сервері, а відповідь приходить одним JSON. Без conversation_id починається нова розмова; її назва — початок першого питання. asset і fiat — пара, вибрана на сайті: підказка асистенту, якщо в питанні пари немає.
+         *
+         *     Відповідь може йти 5–60 с. Помилки: 404 — чужа чи неіснуюча розмова, 429 — ліміт ASSISTANT_MESSAGES_PER_HOUR, 503 — асистент не налаштований чи перевантажений, 502 — асистент не зміг відповісти.
+         */
+        post: operations["send_message_api_v1_assistant_chat_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1090,8 +1148,18 @@ export interface components {
             /** New Password */
             new_password: string;
         };
+        /** ChatAction */
+        ChatAction: {
+            /** Label */
+            label: string;
+            /**
+             * To
+             * @description Шлях сторінки сайту
+             */
+            to: string;
+        };
         /** ChatMessage */
-        ChatMessage: {
+        "ChatMessage-Input": {
             /**
              * Role
              * @enum {string}
@@ -1100,13 +1168,38 @@ export interface components {
             /** Content */
             content: string;
         };
-        /** ChatRequest */
-        ChatRequest: {
+        /** ChatMessage */
+        "ChatMessage-Output": {
+            /** Id */
+            id: string;
             /**
-             * Messages
-             * @description Уся розмова, старші першими; останнє повідомлення — від user
+             * Role
+             * @enum {string}
              */
-            messages: components["schemas"]["ChatMessage"][];
+            role: "user" | "assistant";
+            /** Content */
+            content: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Tool Calls
+             * @description Інструменти, якими асистент перевіряв дані
+             */
+            tool_calls: string[];
+            /** Actions */
+            actions: components["schemas"]["ChatAction"][];
+        };
+        /** ChatResponse */
+        ChatResponse: {
+            /** Conversation Id */
+            conversation_id: string;
+            /** Title */
+            title: string;
+            user_message: components["schemas"]["ChatMessage-Output"];
+            message: components["schemas"]["ChatMessage-Output"];
         };
         /**
          * CollectorStatus
@@ -1211,6 +1304,39 @@ export interface components {
          * @enum {string}
          */
         ContentStatus: "visible" | "hidden" | "deleted";
+        /** Conversation */
+        Conversation: {
+            /** Id */
+            id: string;
+            /** Title */
+            title: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** ConversationDetail */
+        ConversationDetail: {
+            /** Id */
+            id: string;
+            /** Title */
+            title: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Messages */
+            messages: components["schemas"]["ChatMessage-Output"][];
+        };
+        /** ConversationsResponse */
+        ConversationsResponse: {
+            /** Count */
+            count: number;
+            /** Items */
+            items: components["schemas"]["Conversation"][];
+        };
         /**
          * Deal
          * @description Розрахунок угоди на суму інвестиції (FR-08, FR-18).
@@ -1865,6 +1991,16 @@ export interface components {
             updated_at: string | null;
         };
         /**
+         * ProfilePatch
+         * @description Змінюються лише передані поля; null або порожній рядок очищає поле.
+         */
+        ProfilePatch: {
+            /** Display Name */
+            display_name?: string | null;
+            /** Bio */
+            bio?: string | null;
+        };
+        /**
          * ProfileView
          * @description Публічний профіль (FR-40): без email і налаштувань.
          */
@@ -1873,6 +2009,10 @@ export interface components {
             id: number;
             /** Username */
             username: string;
+            /** Display Name */
+            display_name?: string | null;
+            /** Bio */
+            bio?: string | null;
             /** Is Admin */
             is_admin: boolean;
             /** Status */
@@ -1888,6 +2028,11 @@ export interface components {
             likes_received: number;
             /** Reposts Received */
             reposts_received: number;
+            /**
+             * Comments
+             * @default 0
+             */
+            comments: number;
             /** Ban Until */
             ban_until?: string | null;
             /** Ban Reason */
@@ -2227,6 +2372,10 @@ export interface components {
             username: string;
             /** Email */
             email: string;
+            /** Display Name */
+            display_name: string | null;
+            /** Bio */
+            bio: string | null;
             role: components["schemas"]["UserRole"];
             status: components["schemas"]["UserStatus"];
             /** Telegram Connected */
@@ -2267,6 +2416,12 @@ export interface components {
             extra_fees?: number | string | null;
             /** Hide Illiquid */
             hide_illiquid?: boolean | null;
+            /** Notify Comments */
+            notify_comments?: boolean | null;
+            /** Notify Likes */
+            notify_likes?: boolean | null;
+            /** Language */
+            language?: ("uk" | "en") | null;
         };
         /**
          * UserSettings
@@ -2290,6 +2445,12 @@ export interface components {
             extra_fees?: string | null;
             /** Hide Illiquid */
             hide_illiquid?: boolean | null;
+            /** Notify Comments */
+            notify_comments?: boolean | null;
+            /** Notify Likes */
+            notify_likes?: boolean | null;
+            /** Language */
+            language?: ("uk" | "en") | null;
         };
         /**
          * UserStatus
@@ -2343,6 +2504,31 @@ export interface components {
             count: number;
             /** Items */
             items: components["schemas"]["WatchlistItemOut"][];
+        };
+        /** ChatRequest */
+        app__api__v1__ai__ChatRequest: {
+            /**
+             * Messages
+             * @description Уся розмова, старші першими; останнє повідомлення — від user
+             */
+            messages: components["schemas"]["ChatMessage-Input"][];
+        };
+        /** ChatRequest */
+        app__api__v1__assistant__ChatRequest: {
+            /**
+             * Conversation Id
+             * @description Без нього — нова розмова
+             */
+            conversation_id?: string | null;
+            /** Message */
+            message: string;
+            /**
+             * Asset
+             * @description Пара на сайті
+             */
+            asset?: string | null;
+            /** Fiat */
+            fiat?: string | null;
         };
     };
     responses: never;
@@ -2925,6 +3111,39 @@ export interface operations {
             };
         };
     };
+    patch_profile_api_v1_me_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfilePatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     patch_settings_api_v1_me_settings_patch: {
         parameters: {
             query?: never;
@@ -3269,7 +3488,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ChatRequest"];
+                "application/json": components["schemas"]["app__api__v1__ai__ChatRequest"];
             };
         };
         responses: {
@@ -3281,6 +3500,119 @@ export interface operations {
                 content: {
                     "application/json": unknown;
                     "text/event-stream": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_conversations_api_v1_assistant_conversations_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationsResponse"];
+                };
+            };
+        };
+    };
+    get_conversation_api_v1_assistant_conversations__conversation_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_conversation_api_v1_assistant_conversations__conversation_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    send_message_api_v1_assistant_chat_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["app__api__v1__assistant__ChatRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatResponse"];
                 };
             };
             /** @description Validation Error */

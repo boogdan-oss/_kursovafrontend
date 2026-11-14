@@ -36,3 +36,27 @@ export function passwordScore(password: string) {
   if (/[^A-Za-zА-Яа-яІіЇїЄєҐґ0-9]/.test(password)) score++
   return score
 }
+
+export interface PasswordChangeValues {
+  current: string
+  next: string
+  confirm: string
+}
+
+export function validatePasswordChange(values: PasswordChangeValues) {
+  const errors: Partial<Record<keyof PasswordChangeValues, string>> = {}
+  if (!values.current) errors.current = 'Вкажіть поточний пароль'
+  if (values.next.length < MIN_PASSWORD) errors.next = `Мінімум ${MIN_PASSWORD} символів`
+  else if (values.next.length > MAX_PASSWORD) errors.next = `Максимум ${MAX_PASSWORD} символів`
+  else if (values.next === values.current) errors.next = 'Новий пароль збігається з поточним'
+  if (values.confirm !== values.next) errors.confirm = 'Паролі не збігаються'
+  return errors
+}
+
+export function parseAmount(text: string, allowZero = false): string | null | undefined {
+  const normalized = text.split(' ').join('').replace(',', '.')
+  if (!normalized) return null
+  const value = Number(normalized)
+  if (!Number.isFinite(value) || value < 0 || (!allowZero && value === 0)) return undefined
+  return normalized
+}

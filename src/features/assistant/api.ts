@@ -7,7 +7,7 @@ import type {
 } from '@/shared/api/assistant-types'
 import { endpoints } from '@/shared/api/endpoints'
 
-const CHAT_TIMEOUT_MS = 60_000
+const CHAT_TIMEOUT_MS = 120_000
 
 export async function fetchConversations(signal?: AbortSignal) {
   const { data } = await apiClient.get<ConversationsResponse>(endpoints.assistantConversations, {

@@ -1,50 +1,17 @@
 import { ArrowLeft } from 'lucide-react'
 import { useState } from 'react'
-import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { Link, Navigate, useLocation, useParams } from 'react-router-dom'
 
 import { BanDialog, ConfirmDialog } from '@/features/community/components/Dialogs'
-import { FeedList } from '@/features/community/components/FeedList'
-import { UserAvatar } from '@/features/community/components/UserAvatar'
-import { useCurrentUser, useProfile, useUnbanUser, useUserFeed } from '@/features/community/hooks'
-import { PROFILE_TABS } from '@/features/community/lib'
+import { ProfileFeed, ProfileHeader } from '@/features/community/components/ProfileHeader'
+import { useCurrentUser, useProfile, useUnbanUser } from '@/features/community/hooks'
 import { toApiError } from '@/shared/api/client'
-import type { ProfileTab, ProfileView } from '@/shared/api/community-types'
+import type { ProfileView } from '@/shared/api/community-types'
 import { useNow } from '@/shared/hooks/useNow'
-import { formatCompact, formatDateTime } from '@/shared/lib/format'
+import { formatDateTime } from '@/shared/lib/format'
 import { Button } from '@/shared/ui/button'
-import { Panel } from '@/shared/ui/panel'
-import { Segmented } from '@/shared/ui/segmented'
-import { Skeleton } from '@/shared/ui/skeleton'
-import { Tag } from '@/shared/ui/tag'
 
 const CLOCK_MS = 30_000
-const MONTH_FORMAT = new Intl.DateTimeFormat('uk-UA', { month: 'long', year: 'numeric' })
-
-const EMPTY: Record<ProfileTab, string> = {
-  posts: 'Публікацій ще немає.',
-  reposts: 'Репостів ще немає.',
-  likes: 'Вподобаних публікацій ще немає.',
-}
-
-function joinedText(value: string) {
-  const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? '' : `на платформі з ${MONTH_FORMAT.format(date)}`
-}
-
-function Stat({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="flex min-w-[96px] flex-col gap-0.5 border-l px-4 first:border-l-0">
-      <span className="text-label uppercase text-tertiary">{label}</span>
-      <span className="font-mono text-kpi">{formatCompact(value)}</span>
-    </div>
-  )
-}
-
-function StatusTag({ profile }: { profile: ProfileView }) {
-  if (profile.status === 'banned') return <Tag tone="danger">Заблоковано</Tag>
-  if (profile.status === 'suspended') return <Tag tone="warning">Тимчасово заблоковано</Tag>
-  return profile.is_admin ? <Tag tone="warning">Адмін</Tag> : <Tag tone="accent">Учасник</Tag>
-}
 
 function AdminActions({ profile }: { profile: ProfileView }) {
   const [banning, setBanning] = useState(false)
@@ -90,16 +57,13 @@ function AdminActions({ profile }: { profile: ProfileView }) {
 
 export function UserProfilePage() {
   const { username = '' } = useParams()
-  const [searchParams, setSearchParams] = useSearchParams()
+  const { search } = useLocation()
   const user = useCurrentUser()
   const now = useNow(CLOCK_MS)
-  const tabParam = searchParams.get('tab') as ProfileTab | null
-  const tab = PROFILE_TABS.some((option) => option.value === tabParam) ? tabParam! : 'posts'
-
   const profile = useProfile(username)
-  const feed = useUserFeed(username, tab)
-  const own = user?.username === username
   const data = profile.data
+
+  if (user?.username === username) return <Navigate to={`/profile${search}`} replace />
 
   return (
     <div className="flex flex-col gap-2 p-2">
@@ -111,57 +75,24 @@ export function UserProfilePage() {
         Спільнота
       </Link>
 
-      <Panel className="flex flex-wrap items-center gap-6 p-5">
-        {profile.isPending ? (
-          <Skeleton className="h-20 w-full" />
-        ) : profile.isError || !data ? (
-          <div className="flex flex-col gap-1">
-            <h1 className="text-kpi-lg">@{username}</h1>
-            <p className="text-ui text-muted-foreground">
-              {toApiError(profile.error).code === 'not_found'
-                ? 'Такого користувача не знайдено.'
-                : toApiError(profile.error).message}
-            </p>
-          </div>
-        ) : (
-          <>
-            <UserAvatar username={data.username} size="xl" accent={own} />
-            <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="truncate text-kpi-lg">{data.username}</h1>
-                <StatusTag profile={data} />
-                {own && <Tag tone="accent">Ви</Tag>}
-              </div>
-              <p className="text-ui-lg text-muted-foreground">
-                @{data.username} · {joinedText(data.joined_at)}
-              </p>
-            </div>
-            <div className="flex rounded-sm border py-2">
-              <Stat label="Публікацій" value={data.posts} />
-              <Stat label="Вподобань" value={data.likes_received} />
-              <Stat label="Репостів" value={data.reposts_received} />
-            </div>
-            {own && (
-              <Button asChild variant="secondary" size="terminal">
-                <Link to="/profile">Налаштування</Link>
-              </Button>
-            )}
-            {!own && user?.isAdmin && <AdminActions profile={data} />}
-          </>
-        )}
-      </Panel>
+      <ProfileHeader
+        profile={data}
+        username={username}
+        isPending={profile.isPending}
+        error={profile.error}
+        own={false}
+        displayName={data?.display_name}
+        bio={data?.bio}
+        actions={data && user?.isAdmin ? <AdminActions profile={data} /> : undefined}
+      />
 
       {data && (
-        <div className="flex max-w-[1040px] flex-col gap-2">
-          <Segmented
-            label="Розділ профілю"
-            value={tab}
-            onValueChange={(value) => setSearchParams(value === 'posts' ? {} : { tab: value })}
-            options={PROFILE_TABS}
-            className="self-start"
-          />
-          <FeedList query={feed} now={now} empty={EMPTY[tab]} />
-        </div>
+        <ProfileFeed
+          username={username}
+          counts={{ posts: data.posts }}
+          now={now}
+          className="max-w-[1040px]"
+        />
       )}
     </div>
   )
