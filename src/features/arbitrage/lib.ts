@@ -167,7 +167,6 @@ export function assetPath(item: OpportunityItem) {
   return path
 }
 
-/** Валюти, крім валюти пари, через які проходить угода: для них потрібні окремі рахунки. */
 export function foreignFiats(item: OpportunityItem) {
   const found: string[] = []
   for (const step of item.steps) {
@@ -176,7 +175,6 @@ export function foreignFiats(item: OpportunityItem) {
   return found
 }
 
-/** Шлях грошей: UAH → BTC → PLN → USDT → UAH. Без валют у кроках (стара історія) — null. */
 export function currencyPath(item: OpportunityItem) {
   if (item.steps.some((step) => step.action !== 'TRANSFER' && !step.fiat)) return null
   const path = [item.fiat]

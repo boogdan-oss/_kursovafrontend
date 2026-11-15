@@ -271,6 +271,10 @@ describe('сторінка «Watchlist і сповіщення»', () => {
     expect(
       await within(history).findByText('Спред 1.6% на Bybit — вище порогу'),
     ).toBeInTheDocument()
+    const scroll = within(history).getByRole('region', { name: 'Список сповіщень' })
+    expect(scroll).toHaveClass('overflow-y-auto', 'overscroll-contain')
+    expect(within(scroll).getByText('Спред 1.6% на Bybit — вище порогу')).toBeInTheDocument()
+    expect(within(scroll).queryByRole('button', { name: 'Прочитати всі' })).toBeNull()
     await userEvent.click(within(history).getByRole('button', { name: 'Прочитати всі' }))
     expect(post).toHaveBeenCalledWith('/notifications/read', {})
   })

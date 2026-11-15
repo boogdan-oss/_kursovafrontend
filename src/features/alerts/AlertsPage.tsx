@@ -45,8 +45,8 @@ export function AlertsPage() {
         </p>
       </div>
 
-      <div className="grid items-start gap-2 xl:grid-cols-[minmax(0,1fr)_440px]">
-        <div className="flex min-w-0 flex-col gap-2">
+      <div className="grid gap-2 xl:grid-cols-[minmax(0,1fr)_440px]">
+        <div className="flex min-w-0 flex-col gap-2 self-start">
           <WatchlistTable
             items={watchlist}
             rules={rules}
@@ -73,7 +73,7 @@ export function AlertsPage() {
               }))
             }
           />
-          <NotificationList now={now} />
+          <NotificationList now={now} className="xl:flex-1" />
         </aside>
       </div>
     </div>
