@@ -126,22 +126,6 @@ export function bestSnapshot(
   })
 }
 
-export function exchangeMarketUrl(exchange: string, side: Side, asset: string, fiat: string) {
-  const buy = side === 'BUY'
-  switch (exchange) {
-    case 'binance':
-      return buy
-        ? `https://p2p.binance.com/trade/all-payments/${asset}?fiat=${fiat}`
-        : `https://p2p.binance.com/trade/sell/${asset}?fiat=${fiat}&payment=all-payments`
-    case 'bybit':
-      return `https://www.bybit.com/fiat/trade/otc/?actionType=${buy ? 1 : 0}&token=${asset}&fiat=${fiat}`
-    case 'okx':
-      return `https://www.okx.com/p2p-markets/${fiat.toLowerCase()}/${buy ? 'buy' : 'sell'}-${asset.toLowerCase()}`
-    default:
-      return null
-  }
-}
-
 export function offerKey(offer: Offer) {
   return `${offer.exchange}:${offer.side}:${offer.external_id ?? `${offer.merchant.id}:${offer.price}:${offer.max_amount}`}`
 }

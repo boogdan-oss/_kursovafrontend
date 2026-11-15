@@ -21,6 +21,7 @@ import { pairLabel, POST_MAX } from '@/features/community/lib'
 import { toApiError } from '@/shared/api/client'
 import type { FeedItem, PostPatch, PostView } from '@/shared/api/community-types'
 import { formatRelativeTime } from '@/shared/lib/format'
+import { canBan, canModerate, ROLE_LABELS, ROLE_TONES } from '@/shared/lib/roles'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
 import {
@@ -52,7 +53,9 @@ function AuthorLine({ post, now, own }: { post: PostView; now: number; own: bool
             {post.author.username}
           </Link>
           {own && <Tag tone="accent">Ви</Tag>}
-          {post.author.is_admin && <Tag tone="warning">Адмін</Tag>}
+          {post.author.role !== 'user' && (
+            <Tag tone={ROLE_TONES[post.author.role]}>{ROLE_LABELS[post.author.role]}</Tag>
+          )}
           {post.status === 'hidden' && <Tag tone="danger">Приховано</Tag>}
         </span>
         <span className="text-meta text-muted-foreground">
@@ -153,6 +156,8 @@ export function PostCard({ item, now }: PostCardProps) {
 
   const own = user?.id === post.author.id
   const admin = user?.isAdmin ?? false
+  const mayModerate = canModerate(user, post.author)
+  const mayBan = canBan(user, post.author)
   const mineRepost = repostedBy !== null && repostedBy.id === user?.id
   const actionError = [like, repost, moderate]
     .map((mutation) => (mutation.isError ? toApiError(mutation.error).message : null))
@@ -224,33 +229,38 @@ export function PostCard({ item, now }: PostCardProps) {
                   <>
                     <DropdownMenuSeparator />
                     <DropdownMenuLabel>Модерація</DropdownMenuLabel>
-                    <DropdownMenuItem
-                      onSelect={() =>
-                        moderate.mutate({
-                          id: post.id,
-                          status: post.status === 'hidden' ? 'visible' : 'hidden',
-                        })
-                      }
-                    >
-                      {post.status === 'hidden' ? 'Відновити публікацію' : 'Приховати публікацію'}
-                    </DropdownMenuItem>
-                    {!own && (
-                      <>
-                        <DropdownMenuItem
-                          className="text-destructive focus:text-destructive"
-                          onSelect={() => setConfirm('moderate-delete')}
-                        >
-                          Видалити публікацію
-                        </DropdownMenuItem>
-                        {!post.author.is_admin && (
-                          <DropdownMenuItem
-                            className="text-destructive focus:text-destructive"
-                            onSelect={() => setBanning(true)}
-                          >
-                            Заблокувати автора
-                          </DropdownMenuItem>
-                        )}
-                      </>
+                    {(post.status === 'hidden' || mayModerate) && (
+                      <DropdownMenuItem
+                        onSelect={() =>
+                          moderate.mutate({
+                            id: post.id,
+                            status: post.status === 'hidden' ? 'visible' : 'hidden',
+                          })
+                        }
+                      >
+                        {post.status === 'hidden' ? 'Відновити публікацію' : 'Приховати публікацію'}
+                      </DropdownMenuItem>
+                    )}
+                    {!own && mayModerate && (
+                      <DropdownMenuItem
+                        className="text-destructive focus:text-destructive"
+                        onSelect={() => setConfirm('moderate-delete')}
+                      >
+                        Видалити публікацію
+                      </DropdownMenuItem>
+                    )}
+                    {mayBan && (
+                      <DropdownMenuItem
+                        className="text-destructive focus:text-destructive"
+                        onSelect={() => setBanning(true)}
+                      >
+                        Заблокувати автора
+                      </DropdownMenuItem>
+                    )}
+                    {post.status !== 'hidden' && !mayModerate && (
+                      <p className="px-3 py-1.5 text-meta text-tertiary">
+                        Контент цієї ролі модерує лише старший за роллю
+                      </p>
                     )}
                   </>
                 )}

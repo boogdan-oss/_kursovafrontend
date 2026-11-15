@@ -157,8 +157,9 @@ export function CalculatorResult({
 
       <p className="flex items-start gap-2 text-small text-muted-foreground">
         <Info className="mt-px size-3.5 shrink-0" aria-hidden />
-        Розрахунок — аналітика, не фінансова порада. Ціни на P2P змінюються щохвилини, а
-        CryptoParser не виконує угод.
+        Розрахунок — аналітика, не фінансова порада. Комісії банків враховано лише в межах
+        «Додаткових витрат», які ви вказали. Ціни на P2P змінюються щохвилини, а CryptoParser не
+        виконує угод.
       </p>
     </div>
   )

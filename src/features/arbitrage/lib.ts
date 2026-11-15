@@ -68,8 +68,21 @@ export function routeKey(item: Route) {
 }
 
 export function opportunityKey(item: OpportunityItem) {
-  const steps = item.steps.map((step) => `${step.exchange}.${step.action}.${step.asset}`)
-  return `${routeKey(item)}:${steps.join('>')}`
+  const steps = item.steps.map(
+    (step) =>
+      `${step.exchange}.${step.action}.${step.asset}.${step.fiat ?? ''}.${step.price ?? ''}`,
+  )
+  return `${routeKey(item)}:${item.fiat}:${steps.join('>')}`
+}
+
+export function uniqueOpportunities<Item extends OpportunityItem>(items: Item[]) {
+  const seen = new Set<string>()
+  return items.filter((item) => {
+    const key = opportunityKey(item)
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
 }
 
 export interface Thresholds {
@@ -263,3 +276,6 @@ export function spreadSeries(buy: HistoryItem[], sell: HistoryItem[]): SpreadPoi
   }
   return points
 }
+
+export const BANK_FEES_NOTE =
+  'Net % і AI Score не враховують комісій банків за перекази. Врахувати їх можна в калькуляторі — поле «Додаткові витрати».'

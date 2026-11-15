@@ -15,6 +15,7 @@ import { COMMENT_MAX } from '@/features/community/lib'
 import { toApiError } from '@/shared/api/client'
 import type { CommentView } from '@/shared/api/community-types'
 import { formatRelativeTime } from '@/shared/lib/format'
+import { canModerate } from '@/shared/lib/roles'
 import { Button } from '@/shared/ui/button'
 import {
   DropdownMenu,
@@ -40,6 +41,7 @@ function CommentItem({ comment, now, onReport }: CommentItemProps) {
   const [draft, setDraft] = useState<string | null>(null)
   const own = user?.id === comment.author.id
   const admin = user?.isAdmin ?? false
+  const mayModerate = canModerate(user, comment.author)
   const hidden = comment.status === 'hidden'
 
   function save(event: FormEvent) {
@@ -124,7 +126,7 @@ function CommentItem({ comment, now, onReport }: CommentItemProps) {
                 Поскаржитися
               </DropdownMenuItem>
             )}
-            {admin && !own && (
+            {admin && !own && (hidden || mayModerate) && (
               <>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
@@ -134,12 +136,14 @@ function CommentItem({ comment, now, onReport }: CommentItemProps) {
                 >
                   {hidden ? 'Відновити' : 'Приховати'}
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="text-destructive focus:text-destructive"
-                  onSelect={() => remove.mutate({ id: comment.id, moderate: 'deleted' })}
-                >
-                  Видалити (модерація)
-                </DropdownMenuItem>
+                {mayModerate && (
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive"
+                    onSelect={() => remove.mutate({ id: comment.id, moderate: 'deleted' })}
+                  >
+                    Видалити (модерація)
+                  </DropdownMenuItem>
+                )}
               </>
             )}
           </DropdownMenuContent>

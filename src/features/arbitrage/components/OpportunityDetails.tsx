@@ -1,11 +1,13 @@
+import { ArrowUpRight } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 
 import { ChainDetails, ForeignCurrencyNote } from '@/features/arbitrage/components/ChainDetails'
 import { SpreadSparkline } from '@/features/arbitrage/components/SpreadSparkline'
 import { useDealQuote, useRouteSpread } from '@/features/arbitrage/hooks'
-import { KIND_DESCRIPTIONS } from '@/features/arbitrage/lib'
+import { BANK_FEES_NOTE, KIND_DESCRIPTIONS } from '@/features/arbitrage/lib'
 import type { OpportunityItem } from '@/shared/api/types'
+import { exchangeMarketUrl } from '@/shared/lib/exchange-links'
 import { formatClock, formatCrypto, formatNumber, formatPercent } from '@/shared/lib/format'
 import { paymentLabel } from '@/shared/lib/payments'
 import { cn } from '@/shared/lib/utils'
@@ -70,6 +72,48 @@ function payments(opportunity: OpportunityItem) {
     step.action !== 'TRANSFER' && step.payment_method ? [paymentLabel(step.payment_method)] : [],
   )
   return methods.length ? ` · ${methods.join(' → ')}` : ''
+}
+
+interface ExchangeLink {
+  key: string
+  label: string
+  url: string
+}
+
+function exchangeLinks(opportunity: OpportunityItem): ExchangeLink[] {
+  const links: ExchangeLink[] = []
+  for (const step of opportunity.steps) {
+    if (step.action === 'TRANSFER') continue
+    const fiat = step.fiat ?? opportunity.fiat
+    const url = exchangeMarketUrl(step.exchange, step.action, step.asset, fiat)
+    const key = `${step.exchange}:${step.action}:${step.asset}:${fiat}`
+    if (!url || links.some((link) => link.key === key)) continue
+    const side = step.action === 'BUY' ? 'купівля' : 'продаж'
+    links.push({ key, url, label: `${exchangeName(step.exchange)}: ${side} ${step.asset}/${fiat}` })
+  }
+  return links
+}
+
+function ExchangeLinks({ opportunity }: { opportunity: OpportunityItem }) {
+  const links = exchangeLinks(opportunity)
+  if (links.length === 0) return null
+  return (
+    <div className="flex flex-col gap-1.5 px-3 pb-2.5">
+      {links.map((link) => (
+        <a
+          key={link.key}
+          href={link.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex h-7 items-center justify-between gap-2 rounded-sm border border-border-strong bg-elevated px-2.5 text-ui transition-colors hover:border-primary/70 hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        >
+          <span className="truncate">{link.label}</span>
+          <ArrowUpRight className="size-3.5 shrink-0 text-primary" aria-hidden />
+          <span className="sr-only">(відкриється в новій вкладці)</span>
+        </a>
+      ))}
+    </div>
+  )
 }
 
 interface OpportunityDetailsProps {
@@ -153,7 +197,10 @@ export function OpportunityDetails({
       <ChainDetails opportunity={opportunity} deal={deal} />
       <ForeignCurrencyNote opportunity={opportunity} />
 
-      <SectionLabel className="px-3 pb-2 pt-2.5">Розрахунок</SectionLabel>
+      <SectionLabel className="px-3 pb-2 pt-2.5">Відкрити на біржі</SectionLabel>
+      <ExchangeLinks opportunity={opportunity} />
+
+      <SectionLabel className="border-t px-3 pb-2 pt-2.5">Розрахунок</SectionLabel>
       <Row label="Інвестиція">{money(opportunity.investment)}</Row>
       {chain ? (
         <>
@@ -180,6 +227,7 @@ export function OpportunityDetails({
       <Row label="Чистий прибуток" highlight>
         {money(opportunity.estimated_profit, true)}
       </Row>
+      <p className="border-b px-3 py-2 text-meta text-warning">{BANK_FEES_NOTE}</p>
 
       {!chain && (
         <div className="flex flex-col gap-2 px-3 py-2.5">

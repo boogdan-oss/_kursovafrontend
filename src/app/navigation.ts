@@ -11,3 +11,5 @@ export const NAV_ITEMS: NavItem[] = [
   { to: '/assistant', label: 'AI-асистент' },
   { to: '/community', label: 'Спільнота' },
 ]
+
+export const ADMIN_NAV_ITEM: NavItem = { to: '/admin', label: 'Адмін' }

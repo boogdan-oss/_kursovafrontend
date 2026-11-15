@@ -188,6 +188,10 @@ export function CalculatorForm({
 
         <hr className="border-border" />
         <span className="text-body font-semibold">Комісії та ризик</span>
+        <p className="text-small text-warning">
+          Біржі не знають, скільки бере ваш банк за переказ: ці комісії не входять ні в Net %, ні в
+          AI Score. Вкажіть їх у «Додаткових витратах», щоб прибуток був точним.
+        </p>
 
         <Pair>
           <Field label="Додаткові витрати (банк)" htmlFor={`${id}-extra`}>

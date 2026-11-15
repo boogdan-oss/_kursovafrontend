@@ -64,6 +64,15 @@ export const queryKeys = {
     me: () => [...queryKeys.auth.all, 'me'] as const,
   },
 
+  admin: {
+    all: ['admin'] as const,
+    stats: () => [...queryKeys.admin.all, 'stats'] as const,
+    reports: (status: string | null) => [...queryKeys.admin.all, 'reports', status] as const,
+    hidden: () => [...queryKeys.admin.all, 'hidden'] as const,
+    users: (params: object) => [...queryKeys.admin.all, 'users', params] as const,
+    bans: () => [...queryKeys.admin.all, 'bans'] as const,
+  },
+
   community: {
     all: ['community'] as const,
     feeds: () => [...queryKeys.community.all, 'feed'] as const,

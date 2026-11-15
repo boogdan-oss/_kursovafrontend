@@ -30,3 +30,12 @@ export interface FeedParams {
   asset?: string
   fiat?: string
 }
+
+export type ModerationStats = Schema<'ModerationStats'>
+export type ReportsResponse = Schema<'ReportsResponse'>
+export type ReportState = ReportView['status']
+export type ResolveAction = Schema<'ResolveIn'>['action']
+export type HiddenResponse = Schema<'HiddenResponse'>
+export type AdminUser = Schema<'AdminUserView'>
+export type AdminUsersResponse = Schema<'UsersResponse'>
+export type BansResponse = Schema<'BansResponse'>

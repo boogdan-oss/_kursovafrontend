@@ -13,6 +13,7 @@ import {
   routeSummary,
   startsByOpportunity,
   toCsv,
+  uniqueOpportunities,
   type Thresholds,
 } from '@/features/arbitrage/lib'
 import { ApiError, apiClient } from '@/shared/api/client'
@@ -202,6 +203,15 @@ describe('arbitrage lib', () => {
     expect(byOpportunity.has(opportunityKey(worse))).toBe(false)
   })
 
+  it('ключ можливості враховує валюту кроків, повтори прибираються', () => {
+    const viaEur = {
+      ...VIA_KZT,
+      steps: VIA_KZT.steps.map((step) => (step.fiat === 'KZT' ? { ...step, fiat: 'EUR' } : step)),
+    }
+    expect(opportunityKey(viaEur)).not.toBe(opportunityKey(VIA_KZT))
+    expect(uniqueOpportunities([VIA_KZT, viaEur, { ...VIA_KZT }])).toEqual([VIA_KZT, viaEur])
+  })
+
   it('CSV і розбір чисел', () => {
     const [header, row] = toCsv([CROSS]).split('\n')
     expect(header.startsWith('Тип;Актив;Фіат')).toBe(true)
@@ -349,6 +359,81 @@ describe('сторінка «Арбітраж»', () => {
 
     await userEvent.click(screen.getByLabelText('Лише в UAH'))
     expect(await screen.findByRole('tab', { name: 'Ланцюжки · 0' })).toBeInTheDocument()
+  })
+
+  it('ланцюжки через різні валюти не злипаються, а сторінки не накопичують рядки', async () => {
+    const FIATS = [
+      'KZT',
+      'EUR',
+      'USD',
+      'PLN',
+      'GBP',
+      'TRY',
+      'GEL',
+      'CZK',
+      'CHF',
+      'SEK',
+      'NOK',
+      'DKK',
+    ]
+    const many = Array.from({ length: 12 }, (_, index) => ({
+      ...VIA_KZT,
+      net_spread_pct: (4.9 - index * 0.1).toFixed(4),
+      steps: VIA_KZT.steps.map((step) =>
+        step.fiat === 'KZT' ? { ...step, fiat: FIATS[index] } : step,
+      ),
+    }))
+    vi.mocked(apiClient.get).mockImplementation(async (url: string, config) => {
+      if (url === '/opportunities') {
+        const chain = (config?.params as { kind?: string } | undefined)?.kind === 'chain'
+        const items = chain ? many : []
+        return { data: { count: items.length, items } }
+      }
+      return { data: { count: 0, items: [] } }
+    })
+    renderPage('/arbitrage?type=chain&single=0&liquid=0')
+
+    await within(list()).findByText('+4,90%')
+    const rows = () => within(list()).getAllByRole('row').slice(1)
+    expect(rows()).toHaveLength(10)
+
+    await userEvent.click(within(list()).getByText('+4,70%').closest('tr')!)
+    expect(within(list()).getByText('+4,70%').closest('tr')).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+    expect(
+      within(list())
+        .getAllByRole('row')
+        .filter((row) => row.getAttribute('aria-selected') === 'true'),
+    ).toHaveLength(1)
+
+    await userEvent.click(screen.getByRole('button', { name: '2' }))
+    expect(rows()).toHaveLength(2)
+    expect(within(list()).queryByText('+4,90%')).not.toBeInTheDocument()
+    expect(rows()[0]).toHaveAttribute('aria-selected', 'true')
+
+    await userEvent.click(screen.getByRole('button', { name: '1' }))
+    expect(rows()).toHaveLength(10)
+  })
+
+  it('деталі дають посилання на біржі в новій вкладці й примітку про банківські комісії', async () => {
+    renderPage()
+    await within(list()).findByText('+1,42%')
+    const panel = details()
+
+    const buy = within(panel).getByRole('link', { name: /Bybit: купівля USDT\/UAH/ })
+    expect(buy).toHaveAttribute(
+      'href',
+      'https://www.bybit.com/fiat/trade/otc/?actionType=1&token=USDT&fiat=UAH',
+    )
+    expect(buy).toHaveAttribute('target', '_blank')
+    expect(buy).toHaveAttribute('rel', 'noopener noreferrer')
+    expect(within(panel).getByRole('link', { name: /Binance: продаж USDT\/UAH/ })).toHaveAttribute(
+      'href',
+      'https://p2p.binance.com/trade/sell/USDT?fiat=UAH&payment=all-payments',
+    )
+    expect(within(panel).getByText(/не враховують комісій банків/)).toBeInTheDocument()
   })
 
   it('знята біржа прибирає її маршрути', async () => {

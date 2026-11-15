@@ -152,7 +152,7 @@ describe('сторінка «Головна»', () => {
 
   afterEach(() => vi.restoreAllMocks())
 
-  it('показує показники, ціни, топ-3 і стан бірж', async () => {
+  it('показує показники, ціни й топ-3 без стану бірж (він в адмінці)', async () => {
     render(
       <Providers>
         <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
@@ -182,7 +182,6 @@ describe('сторінка «Головна»', () => {
     )
     expect(within(top).queryByText('41')).not.toBeInTheDocument()
 
-    expect(screen.getByText('Кулдаун')).toBeInTheDocument()
-    expect(screen.getByText('Redis: помилка')).toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'Стан бірж' })).not.toBeInTheDocument()
   })
 })

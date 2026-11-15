@@ -35,6 +35,16 @@ export type AuthResponse = Schema<'AuthResponse'>
 export type LoginRequest = Schema<'LoginRequest'>
 export type RegisterRequest = Schema<'RegisterRequest'>
 export type User = Schema<'UserOut'>
+export type AlertRule = Schema<'RuleOut'>
+export type AlertRuleInput = Schema<'RuleIn'>
+export type AlertRulePatch = Schema<'RulePatch'>
+export type AlertRulesResponse = Schema<'RulesResponse'>
+export type AlertChannel = AlertRule['channels'][number]
+export type AppNotification = Schema<'NotificationOut'>
+export type NotificationsResponse = Schema<'NotificationsResponse'>
+export type WatchlistItem = Schema<'WatchlistItemOut'>
+export type WatchlistInput = Schema<'WatchlistIn'>
+export type WatchlistResponse = Schema<'WatchlistResponse'>
 
 export type MarketsParams = QueryParams<'list_markets_api_v1_markets_get'>
 export type SnapshotParams = QueryParams<'market_snapshot_api_v1_market_snapshot_get'>

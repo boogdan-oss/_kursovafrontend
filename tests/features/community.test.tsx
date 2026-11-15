@@ -18,9 +18,9 @@ import type { AuthResponse } from '@/shared/api/types'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useFiltersStore } from '@/store/useFiltersStore'
 
-const ME: Author = { id: 1, username: 'bohdan', is_admin: false }
-const MAX: Author = { id: 101, username: 'max_p2p', is_admin: false }
-const IRYNA: Author = { id: 102, username: 'iryna.crypto', is_admin: false }
+const ME: Author = { id: 1, username: 'bohdan', is_admin: false, role: 'user' }
+const MAX: Author = { id: 101, username: 'max_p2p', is_admin: false, role: 'user' }
+const IRYNA: Author = { id: 102, username: 'iryna.crypto', is_admin: false, role: 'user' }
 
 const OPPORTUNITY: AttachedOpportunity = {
   id: 9001,
@@ -84,6 +84,7 @@ const PROFILE: ProfileView = {
   id: 101,
   username: 'max_p2p',
   is_admin: false,
+  role: 'user',
   status: 'active',
   joined_at: '2026-10-01T10:00:00Z',
   posts: 12,

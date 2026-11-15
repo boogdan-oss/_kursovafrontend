@@ -2,7 +2,6 @@ import { ArrowUpRight } from 'lucide-react'
 
 import {
   deviationPct,
-  exchangeMarketUrl,
   isSuspicious,
   offerKey,
   RISK_LABELS,
@@ -11,6 +10,7 @@ import {
   type Side,
 } from '@/features/offers/lib'
 import type { Offer } from '@/shared/api/types'
+import { exchangeMarketUrl } from '@/shared/lib/exchange-links'
 import { formatNumber, formatPercent, formatRatio } from '@/shared/lib/format'
 import { paymentLabel } from '@/shared/lib/payments'
 import { cn } from '@/shared/lib/utils'

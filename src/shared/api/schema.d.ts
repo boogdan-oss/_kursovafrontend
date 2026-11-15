@@ -960,10 +960,80 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Користувачі: пошук і фільтр за роллю
+         * @description query шукає за username, display_name і email без урахування регістру. reports_against — усі скарги на публікації й коментарі користувача.
+         */
+        get: operations["list_users_api_v1_admin_users_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users/{user_id}/role": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Призначити чи зняти адміністратора (лише owner)
+         * @description Свою роль чи роль власника змінити не можна (400).
+         */
+        put: operations["change_role_api_v1_admin_users__user_id__role_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * AdminUserView
+         * @description Користувач у панелі адміністратора: роль, стан і сигнали для модерації.
+         */
+        AdminUserView: {
+            /** Id */
+            id: number;
+            /** Username */
+            username: string;
+            /** Display Name */
+            display_name: string | null;
+            /** Email */
+            email: string;
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "user" | "admin" | "owner";
+            /** Status */
+            status: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Posts */
+            posts: number;
+            /** Reports Against */
+            reports_against: number;
+        };
         /**
          * AttachedOpportunity
          * @description Знімок прикріпленої можливості з історії (FR-42).
@@ -1033,6 +1103,12 @@ export interface components {
              * @default false
              */
             is_admin: boolean;
+            /**
+             * Role
+             * @default user
+             * @enum {string}
+             */
+            role: "user" | "admin" | "owner";
         };
         /** BanIn */
         BanIn: {
@@ -2015,6 +2091,12 @@ export interface components {
             bio?: string | null;
             /** Is Admin */
             is_admin: boolean;
+            /**
+             * Role
+             * @default user
+             * @enum {string}
+             */
+            role: "user" | "admin" | "owner";
             /** Status */
             status: string;
             /**
@@ -2131,6 +2213,15 @@ export interface components {
              * @enum {string}
              */
             action: "hide" | "delete" | "dismiss";
+        };
+        /** RoleIn */
+        RoleIn: {
+            /**
+             * Role
+             * @description Власника через API не призначають
+             * @enum {string}
+             */
+            role: "user" | "admin";
         };
         /** RuleIn */
         RuleIn: {
@@ -2393,7 +2484,7 @@ export interface components {
          * UserRole
          * @enum {string}
          */
-        UserRole: "user" | "admin";
+        UserRole: "user" | "admin" | "owner";
         /**
          * UserSettings
          * @description Персональні налаштування. Усі поля необов'язкові; null у PATCH прибирає поле.
@@ -2457,6 +2548,13 @@ export interface components {
          * @enum {string}
          */
         UserStatus: "active" | "suspended" | "banned";
+        /** UsersResponse */
+        UsersResponse: {
+            /** Count */
+            count: number;
+            /** Items */
+            items: components["schemas"]["AdminUserView"][];
+        };
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -4450,6 +4548,74 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_users_api_v1_admin_users_get: {
+        parameters: {
+            query?: {
+                query?: string | null;
+                role?: components["schemas"]["UserRole"] | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UsersResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    change_role_api_v1_admin_users__user_id__role_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoleIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUserView"];
+                };
             };
             /** @description Validation Error */
             422: {

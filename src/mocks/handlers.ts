@@ -5,22 +5,15 @@ import { endpoints } from '@/shared/api/endpoints'
 import type { ForecastHorizon, ForecastSide } from '@/shared/api/forecast-types'
 import type { HistoryResponse } from '@/shared/api/types'
 
-import alertRulesJson from './fixtures/alert-rules.json'
 import forecastModelsJson from './fixtures/forecast-models.json'
-import notificationsJson from './fixtures/notifications.json'
-import watchlistJson from './fixtures/watchlist.json'
 import { MIN_POINTS, trendForecast, type PricePoint } from './forecast-model'
 import { chat, getConversation, listConversations } from './assistant'
 import { communityHandlers } from './community'
-import type { AlertRule, AlertRuleInput } from './types'
 
 const url = (path: string) => `*/api/v1${path}`
 
 const LATENCY_MS = 250
 const HISTORY_WINDOW_MS = 8 * 3_600_000
-
-let rules = structuredClone(alertRulesJson.items) as AlertRule[]
-let nextRuleId = rules.length + 1
 
 function detail(message: string, status: number) {
   return HttpResponse.json({ detail: message }, { status })
@@ -73,52 +66,6 @@ export const handlers = [
   http.get(url(endpoints.forecastModels), async () => {
     await delay(LATENCY_MS)
     return HttpResponse.json(forecastModelsJson)
-  }),
-
-  http.get(url(endpoints.alertRules), async () => {
-    await delay(LATENCY_MS)
-    return HttpResponse.json({ count: rules.length, items: rules })
-  }),
-
-  http.post(url(endpoints.alertRules), async ({ request }) => {
-    await delay(LATENCY_MS)
-    const input = (await request.json()) as AlertRuleInput
-    if (!input.title?.trim()) return detail('Вкажіть назву правила', 422)
-    const rule: AlertRule = {
-      ...input,
-      id: `rule-${nextRuleId++}`,
-      last_triggered_at: null,
-      triggered_today: 0,
-    }
-    rules = [...rules, rule]
-    return HttpResponse.json(rule, { status: 201 })
-  }),
-
-  http.patch(url(endpoints.alertRule(':id')), async ({ params, request }) => {
-    await delay(LATENCY_MS)
-    const current = rules.find((rule) => rule.id === params.id)
-    if (!current) return detail('Правило не знайдено', 404)
-    const patch = (await request.json()) as Partial<AlertRuleInput>
-    const updated: AlertRule = { ...current, ...patch, id: current.id }
-    rules = rules.map((rule) => (rule.id === current.id ? updated : rule))
-    return HttpResponse.json(updated)
-  }),
-
-  http.delete(url(endpoints.alertRule(':id')), async ({ params }) => {
-    await delay(LATENCY_MS)
-    if (!rules.some((rule) => rule.id === params.id)) return detail('Правило не знайдено', 404)
-    rules = rules.filter((rule) => rule.id !== params.id)
-    return new HttpResponse(null, { status: 204 })
-  }),
-
-  http.get(url(endpoints.notifications), async () => {
-    await delay(LATENCY_MS)
-    return HttpResponse.json(notificationsJson)
-  }),
-
-  http.get(url(endpoints.watchlist), async () => {
-    await delay(LATENCY_MS)
-    return HttpResponse.json(watchlistJson)
   }),
 
   http.get(url(endpoints.assistantConversations), async () => {

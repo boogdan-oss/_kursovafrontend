@@ -9,6 +9,7 @@ import { toApiError } from '@/shared/api/client'
 import type { ProfileView } from '@/shared/api/community-types'
 import { useNow } from '@/shared/hooks/useNow'
 import { formatDateTime } from '@/shared/lib/format'
+import { canBan } from '@/shared/lib/roles'
 import { Button } from '@/shared/ui/button'
 
 const CLOCK_MS = 30_000
@@ -17,8 +18,6 @@ function AdminActions({ profile }: { profile: ProfileView }) {
   const [banning, setBanning] = useState(false)
   const [unbanning, setUnbanning] = useState(false)
   const unban = useUnbanUser()
-
-  if (profile.is_admin) return null
 
   return (
     <div className="flex flex-col items-end gap-1.5">
@@ -38,7 +37,11 @@ function AdminActions({ profile }: { profile: ProfileView }) {
         </span>
       )}
       <BanDialog
-        user={banning ? { id: profile.id, username: profile.username, is_admin: false } : null}
+        user={
+          banning
+            ? { id: profile.id, username: profile.username, is_admin: false, role: profile.role }
+            : null
+        }
         onClose={() => setBanning(false)}
       />
       <ConfirmDialog
@@ -83,7 +86,7 @@ export function UserProfilePage() {
         own={false}
         displayName={data?.display_name}
         bio={data?.bio}
-        actions={data && user?.isAdmin ? <AdminActions profile={data} /> : undefined}
+        actions={data && canBan(user, data) ? <AdminActions profile={data} /> : undefined}
       />
 
       {data && (

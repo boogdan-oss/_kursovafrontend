@@ -39,15 +39,49 @@ const users = new Map<
   number,
   Author & { joined: number; status: 'active' | 'suspended' | 'banned' }
 >([
-  [101, { id: 101, username: 'max_p2p', is_admin: false, joined: ago(900), status: 'active' }],
+  [
+    101,
+    {
+      id: 101,
+      username: 'max_p2p',
+      is_admin: false,
+      role: 'user',
+      joined: ago(900),
+      status: 'active',
+    },
+  ],
   [
     102,
-    { id: 102, username: 'iryna.crypto', is_admin: false, joined: ago(1500), status: 'active' },
+    {
+      id: 102,
+      username: 'iryna.crypto',
+      is_admin: false,
+      role: 'user',
+      joined: ago(1500),
+      status: 'active',
+    },
   ],
-  [103, { id: 103, username: 'olena_trader', is_admin: false, joined: ago(700), status: 'active' }],
+  [
+    103,
+    {
+      id: 103,
+      username: 'olena_trader',
+      is_admin: false,
+      role: 'user',
+      joined: ago(700),
+      status: 'active',
+    },
+  ],
   [
     104,
-    { id: 104, username: 'crypto_bonus_24', is_admin: false, joined: ago(48), status: 'active' },
+    {
+      id: 104,
+      username: 'crypto_bonus_24',
+      is_admin: false,
+      role: 'user',
+      joined: ago(48),
+      status: 'active',
+    },
   ],
 ])
 
@@ -124,7 +158,7 @@ const comments: CommentView[] = [
   {
     id: 1,
     post_id: 1,
-    author: { id: 102, username: 'iryna.crypto', is_admin: false },
+    author: { id: 102, username: 'iryna.crypto', is_admin: false, role: 'user' },
     text: 'Підтверджую, з monobank на privatbank працює. Але вивід з Bybit іноді затримується.',
     status: 'visible',
     created_at: new Date(ago(0.2)).toISOString(),
@@ -133,7 +167,7 @@ const comments: CommentView[] = [
   {
     id: 2,
     post_id: 1,
-    author: { id: 103, username: 'olena_trader', is_admin: false },
+    author: { id: 103, username: 'olena_trader', is_admin: false, role: 'user' },
     text: 'Скільки тримався спред? У мене за годину звузився до 0.6%.',
     status: 'visible',
     created_at: new Date(ago(0.1)).toISOString(),
@@ -156,7 +190,8 @@ function me() {
     users.set(user.id, {
       id: user.id,
       username: user.username,
-      is_admin: user.role === 'admin',
+      is_admin: user.role !== 'user',
+      role: user.role,
       joined: new Date(user.created_at).getTime(),
       status: 'active',
     })
@@ -177,12 +212,17 @@ function me() {
     })
     posts.find((post) => post.id === 2)?.reposts.set(user.id, ago(0.8))
   }
-  return { id: user.id, admin: user.role === 'admin' }
+  return { id: user.id, admin: user.role !== 'user' }
 }
 
 function author(id: number): Author {
   const user = users.get(id)
-  return { id, username: user?.username ?? `user${id}`, is_admin: user?.is_admin ?? false }
+  return {
+    id,
+    username: user?.username ?? `user${id}`,
+    is_admin: user?.is_admin ?? false,
+    role: user?.role ?? 'user',
+  }
 }
 
 function view(post: StoredPost, viewer: number | null): PostView {
@@ -434,6 +474,7 @@ export const communityHandlers = [
         id: user.id,
         username: user.username,
         is_admin: user.is_admin,
+        role: user.role,
         status: user.status,
         joined_at: new Date(user.joined).toISOString(),
         posts: own.length,

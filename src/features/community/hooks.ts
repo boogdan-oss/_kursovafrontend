@@ -39,6 +39,7 @@ import type {
   ProfileTab,
 } from '@/shared/api/community-types'
 import { queryKeys } from '@/shared/api/queryKeys'
+import { isStaff } from '@/shared/lib/roles'
 import { useAuthStore } from '@/store/useAuthStore'
 
 const FEED_REFRESH_MS = 60_000
@@ -48,7 +49,7 @@ type Feed = InfiniteData<FeedPage, unknown>
 
 export function useCurrentUser() {
   const user = useAuthStore((state) => state.session?.user)
-  return user ? { ...user, isAdmin: user.role === 'admin' } : null
+  return user ? { ...user, isAdmin: isStaff(user.role) } : null
 }
 
 function mapFeeds(client: QueryClient, map: (page: FeedPage) => FeedPage) {
@@ -77,6 +78,7 @@ function removePost(client: QueryClient, id: number) {
 
 function refreshCommunity(client: QueryClient) {
   void client.invalidateQueries({ queryKey: queryKeys.community.all })
+  void client.invalidateQueries({ queryKey: queryKeys.admin.all })
 }
 
 export function useFeed(params: FeedParams) {
@@ -252,6 +254,7 @@ export function useModeratePost() {
       if (post.status === 'deleted') removePost(client, post.id)
       else replacePost(client, post)
       void client.invalidateQueries({ queryKey: queryKeys.community.trending(TRENDING_HOURS) })
+      void client.invalidateQueries({ queryKey: queryKeys.admin.all })
     },
   })
 }

@@ -8,6 +8,7 @@ import { PROFILE_TABS } from '@/features/community/lib'
 import { toApiError } from '@/shared/api/client'
 import type { ProfileTab, ProfileView } from '@/shared/api/community-types'
 import { formatCompact } from '@/shared/lib/format'
+import { ROLE_LABELS, ROLE_TONES } from '@/shared/lib/roles'
 import { cn } from '@/shared/lib/utils'
 import { Panel } from '@/shared/ui/panel'
 import { Segmented } from '@/shared/ui/segmented'
@@ -49,7 +50,7 @@ function Stat({ label, value }: { label: string; value: number | undefined }) {
 function StatusTag({ profile }: { profile: ProfileView }) {
   if (profile.status === 'banned') return <Tag tone="danger">Заблоковано</Tag>
   if (profile.status === 'suspended') return <Tag tone="warning">Тимчасово заблоковано</Tag>
-  return profile.is_admin ? <Tag tone="warning">Адмін</Tag> : <Tag tone="accent">Учасник</Tag>
+  return <Tag tone={ROLE_TONES[profile.role]}>{ROLE_LABELS[profile.role]}</Tag>
 }
 
 interface ProfileHeaderProps {

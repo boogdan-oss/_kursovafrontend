@@ -26,6 +26,7 @@ import {
   sortByNet,
   startsByOpportunity,
   toCsv,
+  uniqueOpportunities,
   usesExchanges,
   type KindFilter,
   type Period,
@@ -89,10 +90,12 @@ export function ArbitragePage() {
 
   const all = useMemo(
     () =>
-      [
-        ...(pairQuery.data?.items ?? []),
-        ...(chainsQuery.data?.items ?? []).filter((item) => involvesAsset(item, asset)),
-      ].filter((item) => usesExchanges(item, exchanges)),
+      uniqueOpportunities(
+        sortByNet([
+          ...(pairQuery.data?.items ?? []),
+          ...(chainsQuery.data?.items ?? []).filter((item) => involvesAsset(item, asset)),
+        ]).filter((item) => usesExchanges(item, exchanges)),
+      ),
     [pairQuery.data, chainsQuery.data, asset, exchanges],
   )
   const thresholds: Thresholds = useMemo(
@@ -237,7 +240,7 @@ export function ArbitragePage() {
             <Panel className="overflow-hidden">
               <PanelHeader
                 title="Активні можливості"
-                meta={`Net — після комісій P2P, виводу та мережі${
+                meta={`Net — після комісій P2P, виводу та мережі, без банківських${
                   pairQuery.dataUpdatedAt
                     ? ` · оновлено ${formatRelativeTime(pairQuery.dataUpdatedAt, now)}`
                     : ''

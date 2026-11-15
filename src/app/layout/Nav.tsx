@@ -3,15 +3,19 @@ import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
 
 import { Logo } from '@/app/layout/Logo'
-import { NAV_ITEMS } from '@/app/navigation'
+import { ADMIN_NAV_ITEM, NAV_ITEMS } from '@/app/navigation'
+import { isStaff } from '@/shared/lib/roles'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/shared/ui/sheet'
+import { useAuthStore } from '@/store/useAuthStore'
 
 function NavItems({ onNavigate }: { onNavigate?: () => void }) {
+  const staff = useAuthStore((state) => isStaff(state.session?.user.role))
+  const items = staff ? [...NAV_ITEMS, ADMIN_NAV_ITEM] : NAV_ITEMS
   return (
     <>
-      {NAV_ITEMS.map(({ to, label }) => (
+      {items.map(({ to, label }) => (
         <NavLink
           key={to}
           to={to}

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import { MemoryRouter, useRoutes } from 'react-router-dom'
 
 import { NAV_ITEMS } from '@/app/navigation'
@@ -17,11 +17,11 @@ vi.mock('@/features/dashboard/api', () => ({
 
 const PAGES: [string, string][] = [
   ['/', 'Огляд ринку'],
-  ['/offers', 'Сканер P2P-оголошень'],
-  ['/arbitrage', 'Арбітражні можливості'],
+  ['/offers', 'Ринок доступний після входу'],
+  ['/arbitrage', 'Арбітраж доступний після входу'],
   ['/calculator', 'Калькулятор угоди'],
-  ['/assistant', 'AI-асистент'],
-  ['/alerts', 'Сповіщення та Watchlist'],
+  ['/assistant', 'AI-асистент доступний після входу'],
+  ['/alerts', 'Сповіщення доступні після входу'],
   ['/community', 'Спільнота'],
 ]
 
@@ -68,6 +68,16 @@ describe('маршрути', () => {
     renderAt('/login')
     expect(screen.getByRole('heading', { level: 1, name: 'Вхід' })).toBeInTheDocument()
     expect(screen.queryByRole('navigation')).not.toBeInTheDocument()
+  })
+
+  it('гість на закритій сторінці бачить кнопки входу й реєстрації', () => {
+    renderAt('/arbitrage?type=chain')
+    const main = screen.getByRole('main')
+    expect(within(main).getByRole('link', { name: 'Увійти' })).toHaveAttribute('href', '/login')
+    expect(within(main).getByRole('link', { name: 'Зареєструватися' })).toHaveAttribute(
+      'href',
+      '/register',
+    )
   })
 
   it('профіль без входу веде на сторінку входу', () => {

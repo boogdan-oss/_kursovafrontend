@@ -38,6 +38,7 @@ const MY_PROFILE: ProfileView = {
   display_name: 'Богдан Ткачук',
   bio: 'Студент, вивчаю P2P-арбітраж USDT/UAH.',
   is_admin: false,
+  role: 'user',
   status: 'active',
   joined_at: '2026-10-01T10:00:00Z',
   posts: 12,

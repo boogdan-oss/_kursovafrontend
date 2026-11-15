@@ -1,7 +1,13 @@
 import { Link } from 'react-router-dom'
 
 import { Route } from '@/features/arbitrage/components/Route'
-import { formatVolume, KIND_BADGES, KIND_LABELS, routeSummary } from '@/features/arbitrage/lib'
+import {
+  formatVolume,
+  KIND_BADGES,
+  KIND_LABELS,
+  opportunityKey,
+  routeSummary,
+} from '@/features/arbitrage/lib'
 import type { OpportunityItem } from '@/shared/api/types'
 import { formatPercent } from '@/shared/lib/format'
 import { cn } from '@/shared/lib/utils'
@@ -55,7 +61,7 @@ export function TopOpportunities({ items, pair, isLoading, className }: TopOppor
                 </TableRow>
               ))
             : items.map((item) => (
-                <TableRow key={`${item.kind}:${item.buy_exchange}:${item.sell_exchange}`}>
+                <TableRow key={opportunityKey(item)}>
                   <TableCell className="py-3.5">
                     <Route
                       from={item.buy_exchange}

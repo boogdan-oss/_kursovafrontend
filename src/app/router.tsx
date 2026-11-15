@@ -3,6 +3,8 @@ import { createBrowserRouter, type RouteObject } from 'react-router-dom'
 import { AppLayout } from '@/app/layout/AppLayout'
 import { AuthLayout } from '@/app/layout/AuthLayout'
 import { NotFoundPage } from '@/app/NotFoundPage'
+import { RequireAuth, RequireStaff } from '@/app/RequireAuth'
+import { AdminPage } from '@/features/admin/AdminPage'
 import { AlertsPage } from '@/features/alerts/AlertsPage'
 import { ArbitragePage } from '@/features/arbitrage/ArbitragePage'
 import { AssistantPage } from '@/features/assistant/AssistantPage'
@@ -22,14 +24,62 @@ export const routes: RouteObject[] = [
     element: <AppLayout />,
     children: [
       { index: true, element: <DashboardPage /> },
-      { path: 'offers', element: <OffersPage /> },
-      { path: 'arbitrage', element: <ArbitragePage /> },
+      {
+        path: 'offers',
+        element: (
+          <RequireAuth
+            title="Ринок доступний після входу"
+            description="Сканер P2P-оголошень з фільтрами за банком, сумою й рейтингом продавця — для зареєстрованих користувачів."
+          >
+            <OffersPage />
+          </RequireAuth>
+        ),
+      },
+      {
+        path: 'arbitrage',
+        element: (
+          <RequireAuth
+            title="Арбітраж доступний після входу"
+            description="Міжбіржові угоди, ланцюжки й AI Score з розрахунком комісій — для зареєстрованих користувачів."
+          >
+            <ArbitragePage />
+          </RequireAuth>
+        ),
+      },
       { path: 'calculator', element: <CalculatorPage /> },
-      { path: 'assistant', element: <AssistantPage /> },
-      { path: 'alerts', element: <AlertsPage /> },
+      {
+        path: 'assistant',
+        element: (
+          <RequireAuth
+            title="AI-асистент доступний після входу"
+            description="Асистент відповідає на питання про P2P, курси й можливості на живих даних — увійдіть, щоб почати розмову."
+          >
+            <AssistantPage />
+          </RequireAuth>
+        ),
+      },
+      {
+        path: 'alerts',
+        element: (
+          <RequireAuth
+            title="Сповіщення доступні після входу"
+            description="Watchlist і правила сповіщень у застосунку, Telegram чи на email зберігаються у вашому акаунті."
+          >
+            <AlertsPage />
+          </RequireAuth>
+        ),
+      },
       { path: 'community', element: <CommunityPage /> },
       { path: 'community/u/:username', element: <UserProfilePage /> },
       { path: 'profile', element: <ProfilePage /> },
+      {
+        path: 'admin',
+        element: (
+          <RequireStaff>
+            <AdminPage />
+          </RequireStaff>
+        ),
+      },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

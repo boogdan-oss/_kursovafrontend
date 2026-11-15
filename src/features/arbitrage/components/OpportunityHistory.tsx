@@ -110,9 +110,7 @@ export function OpportunityHistory({
             : pageItems.map((item) => {
                 const active = isStillActive(item, checkedAt)
                 return (
-                  <TableRow
-                    key={`${item.detected_at}:${item.kind}:${item.buy_exchange}:${item.sell_exchange}`}
-                  >
+                  <TableRow key={item.id}>
                     <TableCell
                       className={cn(terminalCell, 'whitespace-nowrap text-muted-foreground')}
                     >
