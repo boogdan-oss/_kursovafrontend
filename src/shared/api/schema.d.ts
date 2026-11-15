@@ -414,6 +414,67 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/notify-email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Пошта для сповіщень: надіслати код підтвердження
+         * @description На вказану адресу йде 6-значний код (дійсний 15 хвилин); адреса стає активною лише після POST /me/notify-email/confirm. Новий код — не частіше ніж раз на хвилину (429). Без пошти на сервері — 503.
+         */
+        post: operations["notify_email_request_api_v1_me_notify_email_post"];
+        /** Пошта для сповіщень: повернути email акаунта */
+        delete: operations["notify_email_clear_api_v1_me_notify_email_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/notify-email/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Пошта для сповіщень: підтвердити кодом
+         * @description Невірний чи застарілий код — 400; після 5 невдалих спроб код анулюється.
+         */
+        post: operations["notify_email_confirm_api_v1_me_notify_email_confirm_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/notifications/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Тестове сповіщення в Telegram чи на пошту
+         * @description Перевірка, що канал працює. Раз на 30 секунд на канал (429). Telegram не підключений — 400; бот чи пошта на сервері не налаштовані — 503; канал не прийняв повідомлення — 502.
+         */
+        post: operations["notification_test_api_v1_me_notifications_test_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/watchlist": {
         parameters: {
             query?: never;
@@ -1769,6 +1830,29 @@ export interface components {
             /** Items */
             items: components["schemas"]["NotificationOut"][];
         };
+        /** NotifyEmailCode */
+        NotifyEmailCode: {
+            /** Email */
+            email: string;
+            /**
+             * Expires In
+             * @description Скільки секунд дійсний код
+             */
+            expires_in: number;
+        };
+        /** NotifyEmailConfirm */
+        NotifyEmailConfirm: {
+            /** Code */
+            code: string;
+        };
+        /** NotifyEmailRequest */
+        NotifyEmailRequest: {
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+        };
         /**
          * Offer
          * @description Нормалізоване P2P-оголошення — вихід будь-якого `ExchangeAdapter`.
@@ -2432,6 +2516,24 @@ export interface components {
             /** Expires In */
             expires_in: number;
         };
+        /** TestNotificationRequest */
+        TestNotificationRequest: {
+            /**
+             * Channel
+             * @enum {string}
+             */
+            channel: "telegram" | "email";
+        };
+        /** TestNotificationResponse */
+        TestNotificationResponse: {
+            /**
+             * Channel
+             * @enum {string}
+             */
+            channel: "telegram" | "email";
+            /** Sent To */
+            sent_to: string;
+        };
         /**
          * TrendingPair
          * @description Пара, яку найбільше обговорюють у видимих публікаціях за період.
@@ -2473,6 +2575,21 @@ export interface components {
             telegram_connected: boolean;
             /** Google Connected */
             google_connected: boolean;
+            /**
+             * Notify Email
+             * @description Підтверджена пошта для сповіщень; null — листи йдуть на email акаунта
+             */
+            notify_email: string | null;
+            /**
+             * Email Alerts Available
+             * @description Чи налаштована пошта на сервері
+             */
+            email_alerts_available: boolean;
+            /**
+             * Telegram Alerts Available
+             * @description Чи налаштований Telegram-бот
+             */
+            telegram_alerts_available: boolean;
             settings: components["schemas"]["UserSettings-Output"];
             /**
              * Created At
@@ -3310,6 +3427,125 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    notify_email_request_api_v1_me_notify_email_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NotifyEmailRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotifyEmailCode"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    notify_email_clear_api_v1_me_notify_email_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserOut"];
+                };
+            };
+        };
+    };
+    notify_email_confirm_api_v1_me_notify_email_confirm_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NotifyEmailConfirm"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    notification_test_api_v1_me_notifications_test_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TestNotificationRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TestNotificationResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };

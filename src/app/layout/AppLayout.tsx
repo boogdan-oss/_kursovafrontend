@@ -1,6 +1,5 @@
 import { Outlet, useLocation } from 'react-router-dom'
 
-import { Footer } from '@/app/layout/Footer'
 import { Header } from '@/app/layout/Header'
 import { cn } from '@/shared/lib/utils'
 
@@ -21,7 +20,6 @@ export function AppLayout() {
       >
         <Outlet />
       </main>
-      <Footer />
     </div>
   )
 }

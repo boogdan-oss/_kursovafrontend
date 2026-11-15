@@ -59,3 +59,9 @@ if (typeof globalThis.ResizeObserver === 'undefined') {
   }
   vi.stubGlobal('ResizeObserver', ResizeObserverStub)
 }
+
+if (typeof Element.prototype.setPointerCapture !== 'function') {
+  Element.prototype.setPointerCapture = () => {}
+  Element.prototype.releasePointerCapture = () => {}
+  Element.prototype.hasPointerCapture = () => false
+}

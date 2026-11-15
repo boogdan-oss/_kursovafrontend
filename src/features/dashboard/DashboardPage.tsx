@@ -1,6 +1,7 @@
 import { useId, useMemo, useState } from 'react'
 
 import { useOpportunities, useOpportunityHistory } from '@/features/arbitrage/hooks'
+import { PopularPosts } from '@/features/dashboard/components/PopularPosts'
 import { PriceChart, type ChartSeries } from '@/features/dashboard/components/PriceChart'
 import { PriceTable } from '@/features/dashboard/components/PriceTable'
 import { TopOpportunities } from '@/features/dashboard/components/TopOpportunities'
@@ -318,7 +319,15 @@ export function DashboardPage() {
         />
       </div>
 
-      <TopOpportunities items={top} pair={pair} isLoading={loadingOpportunities} />
+      <div className="flex flex-col gap-4 xl:flex-row">
+        <TopOpportunities
+          items={top}
+          pair={pair}
+          isLoading={loadingOpportunities}
+          className="min-w-0 flex-1"
+        />
+        <PopularPosts className="w-full xl:w-[440px] xl:shrink-0" />
+      </div>
     </>
   )
 }

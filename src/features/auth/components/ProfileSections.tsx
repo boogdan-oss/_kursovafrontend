@@ -2,10 +2,15 @@ import { forwardRef, useId, useState, type FormEvent, type ReactNode } from 'rea
 import { useNavigate } from 'react-router-dom'
 
 import { FormError, PasswordStrength } from '@/features/auth/components/AuthForm'
+import type { TestChannel } from '@/features/auth/api'
 import {
   useChangePassword,
+  useClearNotifyEmail,
+  useConfirmNotifyEmail,
   useLogout,
+  useRequestNotifyEmail,
   useTelegramLink,
+  useTestNotification,
   useUnlinkTelegram,
   useUpdateProfile,
   useUpdateSettings,
@@ -431,6 +436,182 @@ function ToggleRow({
   )
 }
 
+function TestButton({ channel, disabled }: { channel: TestChannel; disabled?: boolean }) {
+  const test = useTestNotification()
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <Button
+        variant="secondary"
+        size="terminal"
+        disabled={disabled || test.isPending}
+        onClick={() => test.mutate(channel)}
+      >
+        {test.isPending
+          ? 'Надсилаємо…'
+          : channel === 'telegram'
+            ? 'Тест у Telegram'
+            : 'Тестовий лист'}
+      </Button>
+      {test.isSuccess && (
+        <span role="status" className="text-meta text-success">
+          Надіслано: {test.data.sent_to}
+        </span>
+      )}
+      {test.isError && (
+        <span role="alert" className="text-meta text-destructive">
+          {toApiError(test.error).message}
+        </span>
+      )}
+    </div>
+  )
+}
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const CODE_PATTERN = /^\d{6}$/
+
+type EmailStep = 'view' | 'edit' | 'code'
+
+export function NotifyEmailSection({ user }: { user: User }) {
+  const id = useId()
+  const [step, setStep] = useState<EmailStep>('view')
+  const [address, setAddress] = useState('')
+  const [code, setCode] = useState('')
+  const request = useRequestNotifyEmail()
+  const confirm = useConfirmNotifyEmail()
+  const clear = useClearNotifyEmail()
+  const available = user.email_alerts_available
+  const target = user.notify_email ?? user.email
+  const error = [request, confirm, clear].find((mutation) => mutation.isError)?.error
+
+  function reset() {
+    setStep('view')
+    setAddress('')
+    setCode('')
+    request.reset()
+    confirm.reset()
+  }
+
+  function send(event?: FormEvent) {
+    event?.preventDefault()
+    if (!EMAIL_PATTERN.test(address.trim())) return
+    confirm.reset()
+    request.mutate(address.trim(), { onSuccess: () => setStep('code') })
+  }
+
+  function submitCode(event: FormEvent) {
+    event.preventDefault()
+    if (!CODE_PATTERN.test(code.trim())) return
+    confirm.mutate(code.trim(), { onSuccess: reset })
+  }
+
+  return (
+    <div className="flex flex-col gap-2.5 border-b px-4 py-3" aria-label="Пошта для сповіщень">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-ui-lg">Пошта для сповіщень</span>
+        {!available && <Tag tone="neutral">не налаштована на сервері</Tag>}
+      </div>
+      <p className="text-meta text-muted-foreground">
+        Листи за правилами з каналом «пошта» приходять на{' '}
+        <span className="font-mono text-foreground">{target}</span>
+        {user.notify_email ? ' (підтверджена адреса)' : ' (email акаунта)'}.
+      </p>
+
+      {step === 'view' && (
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="secondary"
+            size="terminal"
+            disabled={!available}
+            onClick={() => setStep('edit')}
+          >
+            Інша адреса
+          </Button>
+          {user.notify_email && (
+            <Button
+              variant="ghost"
+              size="terminal"
+              disabled={clear.isPending}
+              onClick={() => clear.mutate()}
+            >
+              Повернути email акаунта
+            </Button>
+          )}
+          <TestButton channel="email" disabled={!available} />
+        </div>
+      )}
+
+      {step === 'edit' && (
+        <form className="flex flex-wrap items-end gap-2" onSubmit={send} noValidate>
+          <Field label="Нова адреса" htmlFor={`${id}-email`} className="min-w-[220px] flex-1">
+            <Input
+              id={`${id}-email`}
+              type="email"
+              autoComplete="email"
+              className={CONTROL}
+              value={address}
+              aria-invalid={address !== '' && !EMAIL_PATTERN.test(address.trim())}
+              onChange={(event) => setAddress(event.target.value)}
+            />
+          </Field>
+          <Button
+            type="submit"
+            size="terminal"
+            disabled={request.isPending || !EMAIL_PATTERN.test(address.trim())}
+          >
+            {request.isPending ? 'Надсилаємо…' : 'Надіслати код'}
+          </Button>
+          <Button type="button" variant="ghost" size="terminal" onClick={reset}>
+            Скасувати
+          </Button>
+        </form>
+      )}
+
+      {step === 'code' && (
+        <form className="flex flex-col gap-2" onSubmit={submitCode} noValidate>
+          <p className="text-meta text-muted-foreground">
+            Код надіслано на <span className="font-mono">{request.data?.email}</span>. Він діє{' '}
+            {Math.round((request.data?.expires_in ?? 900) / 60)} хвилин.
+          </p>
+          <div className="flex flex-wrap items-end gap-2">
+            <Field label="Код з листа" htmlFor={`${id}-code`} className="w-[160px]">
+              <Input
+                id={`${id}-code`}
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={6}
+                className={cn(CONTROL, 'font-mono tracking-[0.3em]')}
+                value={code}
+                onChange={(event) => setCode(event.target.value.replace(/\D/g, ''))}
+              />
+            </Field>
+            <Button
+              type="submit"
+              size="terminal"
+              disabled={confirm.isPending || !CODE_PATTERN.test(code)}
+            >
+              {confirm.isPending ? 'Перевіряємо…' : 'Підтвердити'}
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="terminal"
+              disabled={request.isPending}
+              onClick={() => send()}
+            >
+              Надіслати ще раз
+            </Button>
+            <Button type="button" variant="ghost" size="terminal" onClick={reset}>
+              Скасувати
+            </Button>
+          </div>
+        </form>
+      )}
+
+      {error && <FormError>{toApiError(error).message}</FormError>}
+    </div>
+  )
+}
+
 interface NotificationsPanelProps {
   user: User
   checking: boolean
@@ -486,9 +667,17 @@ export function NotificationsPanel({ user, checking, onCheck }: NotificationsPan
               : 'Сповіщення за вашими правилами — у Telegram'
         }
         checked={user.telegram_connected}
-        disabled={link.isPending || unlink.isPending}
+        disabled={link.isPending || unlink.isPending || !user.telegram_alerts_available}
         onCheckedChange={toggleTelegram}
       />
+      {user.telegram_connected && (
+        <div className="border-b px-4 py-2.5">
+          <TestButton channel="telegram" />
+          <p className="mt-1.5 text-meta text-muted-foreground">
+            У боті: /pairs — ціни ваших пар, /rules — правила сповіщень.
+          </p>
+        </div>
+      )}
       {link.data && !user.telegram_connected && (
         <div className="flex flex-col gap-2 border-t px-4 py-3">
           <a
@@ -510,6 +699,7 @@ export function NotificationsPanel({ user, checking, onCheck }: NotificationsPan
           </Button>
         </div>
       )}
+      <NotifyEmailSection user={user} />
       {error && (
         <div className="border-t px-4 py-3">
           <FormError>{toApiError(error).message}</FormError>

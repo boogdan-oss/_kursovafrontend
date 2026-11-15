@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { useEffect, useSyncExternalStore } from 'react'
+import { useEffect, useRef, useSyncExternalStore } from 'react'
 
 import { API_URL } from '@/shared/api/client'
 import {
@@ -8,7 +8,13 @@ import {
   refreshAfterSnapshot,
 } from '@/shared/ws/cache'
 import { MarketSocket } from '@/shared/ws/socket'
-import { MARKET_EVENT_TYPES, type MarketEvent, type SocketStatus } from '@/shared/ws/types'
+import {
+  MARKET_EVENT_TYPES,
+  type AlertEvent,
+  type MarketEvent,
+  type SocketStatus,
+} from '@/shared/ws/types'
+import { useAuthStore } from '@/store/useAuthStore'
 
 const WS_PATH = '/ws/market'
 const REFRESH_INTERVAL_MS = 10_000
@@ -82,6 +88,21 @@ export function useMarketSocket(asset: string, fiat: string) {
       throttle.cancel()
     }
   }, [client, asset, fiat])
+}
+
+export function useAlertEvents(listener: (event: AlertEvent) => void) {
+  const token = useAuthStore((state) => state.session?.accessToken ?? null)
+  const latest = useRef(listener)
+
+  useEffect(() => {
+    latest.current = listener
+  })
+
+  useEffect(() => {
+    marketSocket()?.setToken(token)
+  }, [token])
+
+  useEffect(() => marketSocket()?.onAlert((event) => latest.current(event)), [])
 }
 
 const subscribeNever = () => () => {}

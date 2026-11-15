@@ -1,4 +1,3 @@
-import type { ForecastParams } from '@/shared/api/forecast-types'
 import type {
   CalculatorRequest,
   HistoryParams,
@@ -39,12 +38,6 @@ export const queryKeys = {
       [...queryKeys.calculator.all, 'quote', request] as const,
   },
 
-  forecast: {
-    all: ['forecast'] as const,
-    detail: (params: ForecastParams) => [...queryKeys.forecast.all, 'detail', params] as const,
-    models: () => [...queryKeys.forecast.all, 'models'] as const,
-  },
-
   alerts: {
     all: ['alerts'] as const,
     rules: () => [...queryKeys.alerts.all, 'rules'] as const,
@@ -80,5 +73,6 @@ export const queryKeys = {
     comments: (postId: number) => [...queryKeys.community.all, 'comments', postId] as const,
     profile: (username: string) => [...queryKeys.community.all, 'profile', username] as const,
     trending: (hours: number) => [...queryKeys.community.all, 'trending', hours] as const,
+    popular: (limit: number) => [...queryKeys.community.all, 'popular', limit] as const,
   },
 }

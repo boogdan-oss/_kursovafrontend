@@ -1,4 +1,5 @@
 import type {
+  AlertEvent,
   ClientCommand,
   MarketEvent,
   MarketEventType,
@@ -10,6 +11,7 @@ import type {
 const RECONNECT_DELAYS_MS = [1_000, 2_000, 5_000, 10_000, 30_000]
 
 export type MarketListener = (event: MarketEvent) => void
+export type AlertListener = (event: AlertEvent) => void
 
 interface Subscription {
   pair: PairRef
@@ -34,7 +36,9 @@ export class MarketSocket {
   private status: SocketStatus = 'offline'
   private attempts = 0
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null
+  private token: string | null = null
   private readonly subscriptions = new Set<Subscription>()
+  private readonly alertListeners = new Set<AlertListener>()
   private readonly statusListeners = new Set<() => void>()
   private readonly createSocket: (url: string) => WebSocket
   private readonly delays: number[]
@@ -66,9 +70,41 @@ export class MarketSocket {
     return () => {
       this.subscriptions.delete(subscription)
       const unused = types.filter((type) => this.count(pair, type) === 0)
-      if (this.subscriptions.size === 0) this.close()
+      if (!this.active) this.close()
       else if (unused.length) this.send({ action: 'unsubscribe', pairs: [pair], types: unused })
     }
+  }
+
+  setToken(token: string | null) {
+    if (token === this.token) return
+    const signedOut = this.token !== null && token === null
+    this.token = token
+    if (signedOut) {
+      if (this.socket) this.restart()
+      return
+    }
+    if (!this.listening) return
+    if (this.socket) this.authenticate()
+    else this.connect()
+  }
+
+  onAlert(listener: AlertListener) {
+    this.alertListeners.add(listener)
+    if (this.listening && !this.socket) this.connect()
+    else if (this.alertListeners.size === 1) this.authenticate()
+
+    return () => {
+      this.alertListeners.delete(listener)
+      if (!this.active) this.close()
+    }
+  }
+
+  private get listening() {
+    return this.token !== null && this.alertListeners.size > 0
+  }
+
+  private get active() {
+    return this.subscriptions.size > 0 || this.listening
   }
 
   private count(pair: PairRef, type: MarketEventType) {
@@ -89,6 +125,10 @@ export class MarketSocket {
     if (this.socket?.readyState === WebSocket.OPEN) this.socket.send(JSON.stringify(command))
   }
 
+  private authenticate() {
+    if (this.listening && this.token) this.send({ action: 'auth', token: this.token })
+  }
+
   private connect() {
     this.clearTimer()
     this.setStatus('connecting')
@@ -105,6 +145,7 @@ export class MarketSocket {
       if (this.socket !== socket) return
       this.attempts = 0
       this.setStatus('live')
+      this.authenticate()
       for (const { pair, types } of this.subscriptions) {
         this.send({ action: 'subscribe', pairs: [pair], types })
       }
@@ -127,6 +168,11 @@ export class MarketSocket {
     } catch {
       return
     }
+    if (message.type === 'alert') {
+      if (!this.listening) return
+      for (const listener of [...this.alertListeners]) listener(message)
+      return
+    }
     if (message.type !== 'snapshot' && message.type !== 'opportunity') return
     for (const subscription of [...this.subscriptions]) {
       if (matches(subscription, message)) subscription.listener(message)
@@ -135,7 +181,7 @@ export class MarketSocket {
 
   private scheduleReconnect() {
     this.setStatus('offline')
-    if (this.subscriptions.size === 0) return
+    if (!this.active) return
     const delay = this.delays[Math.min(this.attempts, this.delays.length - 1)]
     this.attempts += 1
     this.reconnectTimer = setTimeout(() => this.connect(), delay)
@@ -146,12 +192,22 @@ export class MarketSocket {
     this.reconnectTimer = null
   }
 
-  private close() {
+  private drop() {
     this.clearTimer()
     const socket = this.socket
     this.socket = null
     this.attempts = 0
     socket?.close()
+  }
+
+  private restart() {
+    this.drop()
+    if (this.active) this.connect()
+    else this.setStatus('offline')
+  }
+
+  private close() {
+    this.drop()
     this.setStatus('offline')
   }
 }

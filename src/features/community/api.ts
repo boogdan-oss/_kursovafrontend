@@ -29,6 +29,14 @@ export async function fetchFeed(params: FeedParams, cursor: string | null, signa
   return data
 }
 
+export async function fetchPopularPosts(limit: number, signal?: AbortSignal) {
+  const { data } = await apiClient.get<FeedPage>(endpoints.communityFeed, {
+    params: { sort: 'popular', limit },
+    signal,
+  })
+  return data.items.map((item) => item.post)
+}
+
 export async function fetchUserFeed(
   username: string,
   tab: ProfileTab,

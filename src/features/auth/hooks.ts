@@ -4,6 +4,8 @@ import { useLocation, useSearchParams } from 'react-router-dom'
 
 import {
   changePassword,
+  clearNotifyEmail,
+  confirmNotifyEmail,
   createTelegramLink,
   exchangeGoogleCode,
   fetchMe,
@@ -11,13 +13,15 @@ import {
   login,
   logout,
   register,
+  requestNotifyEmail,
+  sendTestNotification,
   unlinkTelegram,
   updateProfile,
   updateSettings,
 } from '@/features/auth/api'
 import { safeNext } from '@/features/auth/lib'
 import { queryKeys } from '@/shared/api/queryKeys'
-import type { AuthResponse, LoginRequest } from '@/shared/api/types'
+import type { AuthResponse, LoginRequest, User } from '@/shared/api/types'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useFiltersStore } from '@/store/useFiltersStore'
 
@@ -162,4 +166,31 @@ export function useUnlinkTelegram() {
     mutationFn: unlinkTelegram,
     onSuccess: () => client.invalidateQueries({ queryKey: queryKeys.auth.me() }),
   })
+}
+
+function useApplyUser() {
+  const client = useQueryClient()
+  const setUser = useAuthStore((state) => state.setUser)
+  return (user: User) => {
+    setUser(user)
+    client.setQueryData(queryKeys.auth.me(), user)
+  }
+}
+
+export function useRequestNotifyEmail() {
+  return useMutation({ mutationFn: requestNotifyEmail, meta: { silent: true } })
+}
+
+export function useConfirmNotifyEmail() {
+  const apply = useApplyUser()
+  return useMutation({ mutationFn: confirmNotifyEmail, onSuccess: apply, meta: { silent: true } })
+}
+
+export function useClearNotifyEmail() {
+  const apply = useApplyUser()
+  return useMutation({ mutationFn: clearNotifyEmail, onSuccess: apply, meta: { silent: true } })
+}
+
+export function useTestNotification() {
+  return useMutation({ mutationFn: sendTestNotification, meta: { silent: true } })
 }

@@ -16,6 +16,7 @@ import {
   deletePost,
   fetchComments,
   fetchFeed,
+  fetchPopularPosts,
   fetchProfile,
   fetchTrendingPairs,
   fetchUserFeed,
@@ -79,6 +80,15 @@ function removePost(client: QueryClient, id: number) {
 function refreshCommunity(client: QueryClient) {
   void client.invalidateQueries({ queryKey: queryKeys.community.all })
   void client.invalidateQueries({ queryKey: queryKeys.admin.all })
+}
+
+export function usePopularPosts(limit: number) {
+  return useQuery({
+    queryKey: queryKeys.community.popular(limit),
+    queryFn: ({ signal }) => fetchPopularPosts(limit, signal),
+    refetchInterval: FEED_REFRESH_MS,
+    meta: { silent: true },
+  })
 }
 
 export function useFeed(params: FeedParams) {

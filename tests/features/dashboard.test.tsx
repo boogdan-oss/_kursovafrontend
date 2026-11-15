@@ -5,6 +5,7 @@ import { Providers } from '@/app/providers'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
 import { bestPrices, exchangePrices, exchangesSummary, maxBy } from '@/features/dashboard/lib'
 import { apiClient } from '@/shared/api/client'
+import type { PostView } from '@/shared/api/community-types'
 import type { MarketSnapshot, OpportunityItem } from '@/shared/api/types'
 import { useFiltersStore } from '@/store/useFiltersStore'
 
@@ -72,6 +73,36 @@ const OPPORTUNITIES = [
   opportunity({ buy_exchange: 'htx', net_spread_pct: '0.20', ai_score: 41 }),
 ]
 
+function post(id: number, overrides: Partial<PostView> = {}): PostView {
+  return {
+    id,
+    author: { id: 10 + id, username: `trader${id}`, is_admin: false, role: 'user' },
+    text: `Публікація ${id}`,
+    pair: null,
+    opportunity: null,
+    status: 'visible',
+    likes: 0,
+    comments: 0,
+    reposts: 0,
+    liked_by_me: false,
+    reposted_by_me: false,
+    created_at: new Date().toISOString(),
+    updated_at: null,
+    ...overrides,
+  }
+}
+
+const POPULAR = [
+  post(1, {
+    text: 'Bybit → Binance тримається вже годину',
+    pair: { asset: 'USDT', fiat: 'UAH' },
+    likes: 12,
+    comments: 4,
+    reposts: 2,
+  }),
+  post(2, { likes: 5 }),
+]
+
 const HEALTH = {
   status: 'ok',
   version: 'test',
@@ -114,7 +145,20 @@ describe('dashboard lib', () => {
 })
 
 describe('сторінка «Головна»', () => {
+  let popular: PostView[] = POPULAR
+
+  function renderDashboard() {
+    render(
+      <Providers>
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <DashboardPage />
+        </MemoryRouter>
+      </Providers>,
+    )
+  }
+
   beforeEach(() => {
+    popular = POPULAR
     localStorage.clear()
     useFiltersStore.getState().reset()
     vi.spyOn(apiClient, 'get').mockImplementation(async (url: string) => {
@@ -134,6 +178,14 @@ describe('сторінка «Головна»', () => {
       }
       if (url === '/opportunities/history') return { data: { count: 7, items: [] } }
       if (url === '/health') return { data: HEALTH }
+      if (url === '/community/feed') {
+        return {
+          data: {
+            items: popular.map((item) => ({ post: item, reposted_by: null, at: item.created_at })),
+            next_cursor: null,
+          },
+        }
+      }
       if (url === '/market/history') {
         return {
           data: {
@@ -153,13 +205,7 @@ describe('сторінка «Головна»', () => {
   afterEach(() => vi.restoreAllMocks())
 
   it('показує показники, ціни й топ-3 без стану бірж (він в адмінці)', async () => {
-    render(
-      <Providers>
-        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-          <DashboardPage />
-        </MemoryRouter>
-      </Providers>,
-    )
+    renderDashboard()
 
     expect(await screen.findByText('7 знайдено за останню годину')).toBeInTheDocument()
     expect(screen.getByText('1,42%')).toBeInTheDocument()
@@ -183,5 +229,43 @@ describe('сторінка «Головна»', () => {
     expect(within(top).queryByText('41')).not.toBeInTheDocument()
 
     expect(screen.queryByRole('region', { name: 'Стан бірж' })).not.toBeInTheDocument()
+  })
+
+  it('«Популярне в спільноті»: найпопулярніші публікації за тиждень з парою й лічильниками', async () => {
+    const get = vi.mocked(apiClient.get)
+    renderDashboard()
+
+    const list = await screen.findByRole('list', { name: 'Популярні публікації' })
+    const items = within(list).getAllByRole('listitem')
+    expect(items).toHaveLength(2)
+    expect(within(items[0]).getByText('Bybit → Binance тримається вже годину')).toBeInTheDocument()
+    expect(within(items[0]).getByRole('link', { name: '@trader1' })).toHaveAttribute(
+      'href',
+      '/community/u/trader1',
+    )
+    expect(within(items[0]).getByRole('link', { name: 'USDT/UAH' })).toHaveAttribute(
+      'href',
+      '/community?pair=USDT-UAH',
+    )
+    expect(within(items[0]).getByTitle('Вподобання')).toHaveTextContent('12')
+    expect(within(items[0]).getByTitle('Коментарі')).toHaveTextContent('4')
+    expect(screen.getByRole('link', { name: 'Усі обговорення' })).toHaveAttribute(
+      'href',
+      '/community?tab=popular',
+    )
+    expect(get).toHaveBeenCalledWith('/community/feed', {
+      params: { sort: 'popular', limit: 3 },
+      signal: expect.any(AbortSignal),
+    })
+  })
+
+  it('без обговорень за тиждень пропонує написати першим', async () => {
+    popular = []
+    renderDashboard()
+    expect(await screen.findByText('За тиждень обговорень ще не було')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Написати першим' })).toHaveAttribute(
+      'href',
+      '/community',
+    )
   })
 })

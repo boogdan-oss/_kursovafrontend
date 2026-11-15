@@ -1,4 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
 
 import {
   addToWatchlist,
@@ -11,10 +13,13 @@ import {
   removeFromWatchlist,
   updateRule,
 } from '@/features/alerts/api'
+import { alertToastTitle } from '@/features/alerts/lib'
 import { queryKeys } from '@/shared/api/queryKeys'
 import type { AlertRulePatch } from '@/shared/api/types'
+import { useAlertEvents } from '@/shared/ws/useMarketSocket'
 
 const NOTIFICATIONS_REFRESH_MS = 30_000
+const ALERT_TOAST_MS = 10_000
 
 export function useRules() {
   return useQuery({
@@ -23,12 +28,31 @@ export function useRules() {
   })
 }
 
-export function useNotifications() {
+export function useNotifications({ enabled = true }: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: queryKeys.alerts.notifications(),
     queryFn: ({ signal }) => fetchNotifications(signal),
     refetchInterval: NOTIFICATIONS_REFRESH_MS,
+    enabled,
     meta: { silent: true },
+  })
+}
+
+export function useLiveAlerts() {
+  const client = useQueryClient()
+  const navigate = useNavigate()
+
+  useAlertEvents(({ data }) => {
+    void client.invalidateQueries({ queryKey: queryKeys.alerts.notifications() })
+    void client.invalidateQueries({ queryKey: queryKeys.alerts.rules() })
+    if (!data.channels.includes('in_app')) return
+    toast(alertToastTitle(data), {
+      id: `alert-${data.id}`,
+      description: data.text,
+      duration: ALERT_TOAST_MS,
+      classNames: { description: 'whitespace-pre-line' },
+      action: { label: 'Переглянути', onClick: () => navigate('/alerts') },
+    })
   })
 }
 

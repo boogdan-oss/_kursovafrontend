@@ -8,7 +8,7 @@ import {
   refreshAfterSnapshot,
 } from '@/shared/ws/cache'
 import { MarketSocket } from '@/shared/ws/socket'
-import type { MarketEvent, OpportunityEvent, SnapshotEvent } from '@/shared/ws/types'
+import type { AlertEvent, MarketEvent, OpportunityEvent, SnapshotEvent } from '@/shared/ws/types'
 
 class FakeSocket {
   static instances: FakeSocket[] = []
@@ -64,6 +64,21 @@ const SNAPSHOT_EVENT: SnapshotEvent = {
 }
 
 const PAIR = { asset: 'USDT', fiat: 'UAH' }
+
+const ALERT_EVENT: AlertEvent = {
+  type: 'alert',
+  ts: '2026-11-11T12:00:06Z',
+  data: {
+    id: 11,
+    user_id: 1,
+    rule_id: 7,
+    rule_title: 'USDT/UAH · Bybit',
+    text: 'Купити: Bybit 41,05 / Продати: Binance 41,72',
+    channels: ['in_app'],
+    opportunity: null,
+    created_at: '2026-11-11T12:00:06Z',
+  },
+}
 
 describe('MarketSocket', () => {
   beforeEach(() => {
@@ -150,6 +165,92 @@ describe('MarketSocket', () => {
       'connecting',
       'live',
     ])
+  })
+
+  it('після входу першою командою йде auth, події alert отримують лише слухачі сповіщень', () => {
+    const socket = create()
+    const alerts: AlertEvent[] = []
+    const market: MarketEvent[] = []
+    socket.setToken('access-1')
+    socket.onAlert((event) => alerts.push(event))
+    socket.subscribe(PAIR, ['snapshot'], (event) => market.push(event))
+    expect(FakeSocket.instances).toHaveLength(1)
+
+    const [connection] = FakeSocket.instances
+    connection.open()
+    expect(connection.sent).toEqual([
+      { action: 'auth', token: 'access-1' },
+      { action: 'subscribe', pairs: [PAIR], types: ['snapshot'] },
+    ])
+
+    connection.receive({ type: 'authenticated', ts: '', data: { user_id: 1, username: 'bohdan' } })
+    connection.receive(ALERT_EVENT)
+    connection.receive(SNAPSHOT_EVENT)
+    expect(alerts).toEqual([ALERT_EVENT])
+    expect(market).toEqual([SNAPSHOT_EVENT])
+
+    socket.setToken('access-2')
+    expect(connection.sent.at(-1)).toEqual({ action: 'auth', token: 'access-2' })
+  })
+
+  it('без входу слухач сповіщень не відкриває з’єднання й не отримує alert', () => {
+    const socket = create()
+    const alerts: AlertEvent[] = []
+    socket.onAlert((event) => alerts.push(event))
+    expect(FakeSocket.instances).toHaveLength(0)
+
+    socket.subscribe(PAIR, ['snapshot'], () => {})
+    FakeSocket.instances[0].open()
+    FakeSocket.instances[0].receive(ALERT_EVENT)
+    expect(FakeSocket.instances[0].sent).toEqual([
+      { action: 'subscribe', pairs: [PAIR], types: ['snapshot'] },
+    ])
+    expect(alerts).toEqual([])
+
+    socket.setToken('access-1')
+    expect(FakeSocket.instances[0].sent.at(-1)).toEqual({ action: 'auth', token: 'access-1' })
+  })
+
+  it('вихід скидає вхід на сервері: з підписками — нове з’єднання без auth, без них — закриття', () => {
+    const socket = create()
+    socket.setToken('access-1')
+    const stopAlerts = socket.onAlert(() => {})
+    const stopMarket = socket.subscribe(PAIR, ['snapshot'], () => {})
+    const [first] = FakeSocket.instances
+    first.open()
+
+    socket.setToken(null)
+    expect(first.readyState).toBe(WebSocket.CLOSED)
+    expect(FakeSocket.instances).toHaveLength(2)
+    FakeSocket.instances[1].open()
+    expect(FakeSocket.instances[1].sent).toEqual([
+      { action: 'subscribe', pairs: [PAIR], types: ['snapshot'] },
+    ])
+
+    stopMarket()
+    expect(FakeSocket.instances[1].readyState).toBe(WebSocket.CLOSED)
+    stopAlerts()
+
+    socket.setToken('access-2')
+    const stop = socket.onAlert(() => {})
+    expect(FakeSocket.instances).toHaveLength(3)
+    FakeSocket.instances[2].open()
+    socket.setToken(null)
+    expect(FakeSocket.instances[2].readyState).toBe(WebSocket.CLOSED)
+    expect(socket.getStatus()).toBe('offline')
+    vi.advanceTimersByTime(60_000)
+    expect(FakeSocket.instances).toHaveLength(3)
+    stop()
+  })
+
+  it('останній слухач сповіщень без ринкових підписок закриває з’єднання', () => {
+    const socket = create()
+    socket.setToken('access-1')
+    const stop = socket.onAlert(() => {})
+    FakeSocket.instances[0].open()
+    stop()
+    expect(FakeSocket.instances[0].readyState).toBe(WebSocket.CLOSED)
+    expect(socket.getStatus()).toBe('offline')
   })
 })
 

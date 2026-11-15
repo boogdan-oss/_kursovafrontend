@@ -10,8 +10,6 @@ export const endpoints = {
   calculator: '/calculator',
   collectorStatus: '/collector/status',
 
-  forecast: '/ai/forecast',
-  forecastModels: '/ai/models',
   alertRules: '/alerts/rules',
   alertRule: (id: number) => `/alerts/rules/${id}`,
   notifications: '/notifications',
@@ -30,6 +28,9 @@ export const endpoints = {
   me: '/me',
   meSettings: '/me/settings',
   meTelegram: '/me/telegram',
+  meNotifyEmail: '/me/notify-email',
+  meNotifyEmailConfirm: '/me/notify-email/confirm',
+  meNotificationTest: '/me/notifications/test',
   authChangePassword: '/auth/change-password',
   communityFeed: '/community/feed',
   communityPosts: '/community/posts',

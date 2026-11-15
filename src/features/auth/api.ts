@@ -70,6 +70,40 @@ export async function unlinkTelegram() {
   await apiClient.delete(endpoints.meTelegram)
 }
 
+export interface NotifyEmailCode {
+  email: string
+  expires_in: number
+}
+
+export type TestChannel = 'telegram' | 'email'
+
+export interface TestNotificationResult {
+  channel: TestChannel
+  sent_to: string
+}
+
+export async function requestNotifyEmail(email: string) {
+  const { data } = await apiClient.post<NotifyEmailCode>(endpoints.meNotifyEmail, { email })
+  return data
+}
+
+export async function confirmNotifyEmail(code: string) {
+  const { data } = await apiClient.post<User>(endpoints.meNotifyEmailConfirm, { code })
+  return data
+}
+
+export async function clearNotifyEmail() {
+  const { data } = await apiClient.delete<User>(endpoints.meNotifyEmail)
+  return data
+}
+
+export async function sendTestNotification(channel: TestChannel) {
+  const { data } = await apiClient.post<TestNotificationResult>(endpoints.meNotificationTest, {
+    channel,
+  })
+  return data
+}
+
 export async function exchangeGoogleCode(code: string) {
   const { data } = await apiClient.post<AuthResponse>(endpoints.authGoogleExchange, { code })
   return data

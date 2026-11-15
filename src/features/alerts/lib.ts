@@ -1,6 +1,7 @@
 import type { AlertChannel, AlertRule, AlertRuleInput } from '@/shared/api/types'
 import { formatNumber } from '@/shared/lib/format'
 import { exchangeName } from '@/shared/ui/exchange-label'
+import type { AlertNotification } from '@/shared/ws/types'
 
 export const CHANNELS: AlertChannel[] = ['in_app', 'telegram', 'email']
 
@@ -86,4 +87,10 @@ export function samePair(
   b: { asset: string; fiat: string; exchange?: string | null },
 ) {
   return a.asset === b.asset && a.fiat === b.fiat && (a.exchange ?? null) === (b.exchange ?? null)
+}
+
+export function alertToastTitle(item: Pick<AlertNotification, 'rule_title' | 'opportunity'>) {
+  if (item.rule_title) return item.rule_title
+  const pair = item.opportunity
+  return pair ? `Сповіщення · ${pair.asset}/${pair.fiat}` : 'Спрацювало сповіщення'
 }

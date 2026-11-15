@@ -1,9 +1,10 @@
-import { Bell, LogOut, Search } from 'lucide-react'
+import { LogOut, Search } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 
 import { Logo } from '@/app/layout/Logo'
 import { MainNav, MobileNav } from '@/app/layout/Nav'
+import { NotificationsBell } from '@/features/alerts/components/NotificationsBell'
 import { useLogout } from '@/features/auth/hooks'
 import { Avatar } from '@/shared/ui/avatar'
 import { Button } from '@/shared/ui/button'
@@ -91,11 +92,7 @@ export function Header() {
       <MainNav className="hidden xl:flex" />
       <div className="flex items-center gap-2 sm:gap-3">
         <HeaderSearch />
-        <Button asChild variant="outline" size="icon" className="[&_svg]:size-[18px]">
-          <Link to="/alerts" aria-label="Сповіщення">
-            <Bell />
-          </Link>
-        </Button>
+        <NotificationsBell />
         <Account />
       </div>
     </header>

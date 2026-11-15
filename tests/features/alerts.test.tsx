@@ -20,6 +20,9 @@ const USER: User = {
   status: 'active',
   telegram_connected: false,
   google_connected: false,
+  notify_email: null,
+  email_alerts_available: true,
+  telegram_alerts_available: true,
   settings: {},
   created_at: '2026-10-01T10:00:00Z',
 }

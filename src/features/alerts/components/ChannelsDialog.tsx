@@ -39,6 +39,10 @@ export function ChannelsDialog({
   onConfirm,
 }: ChannelsDialogProps) {
   const telegram = useAuthStore((state) => state.session?.user.telegram_connected ?? false)
+  const mailTo = useAuthStore(
+    (state) => state.session?.user.notify_email ?? state.session?.user.email ?? null,
+  )
+  const mailReady = useAuthStore((state) => state.session?.user.email_alerts_available ?? false)
   const [channels, setChannels] = useState<AlertChannel[]>(initial)
 
   function toggle(channel: AlertChannel) {
@@ -90,7 +94,17 @@ export function ChannelsDialog({
           )}
           {channels.includes('email') && (
             <p className="text-meta text-muted-foreground">
-              Лист прийде на email вашого акаунта, якщо на сервері налаштовано пошту.
+              {mailReady ? (
+                <>
+                  Лист прийде на <span className="font-mono">{mailTo}</span>. Змінити адресу можна в{' '}
+                  <Link to="/profile" className="text-primary hover:underline">
+                    профілі
+                  </Link>
+                  .
+                </>
+              ) : (
+                'Пошта на сервері ще не налаштована: такий канал поки не працює.'
+              )}
             </p>
           )}
         </fieldset>
