@@ -90,12 +90,10 @@ export interface Thresholds {
   minAiScore: number
   minVolume: number | null
   liquidOnly: boolean
-  singleFiat?: boolean
 }
 
 export function passesThresholds(item: OpportunityItem, thresholds: Thresholds) {
-  const { minNet, minAiScore, minVolume, liquidOnly, singleFiat } = thresholds
-  if (singleFiat && foreignFiats(item).length > 0) return false
+  const { minNet, minAiScore, minVolume, liquidOnly } = thresholds
   if (Number(item.net_spread_pct) < minNet) return false
   if (minAiScore > 0 && (item.ai_score ?? -1) < minAiScore) return false
   if (minVolume !== null && Number(item.max_volume) < minVolume) return false

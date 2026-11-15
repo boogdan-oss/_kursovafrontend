@@ -356,9 +356,6 @@ describe('сторінка «Арбітраж»', () => {
     expect(
       within(panel).getByText(/Потрібні банківські рахунки у валютах: .*(KZT)/),
     ).toBeInTheDocument()
-
-    await userEvent.click(screen.getByLabelText('Лише в UAH'))
-    expect(await screen.findByRole('tab', { name: 'Ланцюжки · 0' })).toBeInTheDocument()
   })
 
   it('ланцюжки через різні валюти не злипаються, а сторінки не накопичують рядки', async () => {
@@ -391,7 +388,7 @@ describe('сторінка «Арбітраж»', () => {
       }
       return { data: { count: 0, items: [] } }
     })
-    renderPage('/arbitrage?type=chain&single=0&liquid=0')
+    renderPage('/arbitrage?type=chain&liquid=0')
 
     await within(list()).findByText('+4,90%')
     const rows = () => within(list()).getAllByRole('row').slice(1)

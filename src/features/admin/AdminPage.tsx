@@ -89,7 +89,6 @@ export function AdminPage() {
         <Panel aria-label="Модерація" className="overflow-hidden">
           <PanelHeader
             title={tab === 'reports' ? 'Скарги' : tab === 'hidden' ? 'Приховане' : 'Користувачі'}
-            meta={tab === 'reports' ? 'FR-43, FR-44' : tab === 'hidden' ? 'FR-46' : 'FR-45 · ролі'}
             actions={
               <Segmented
                 size="sm"

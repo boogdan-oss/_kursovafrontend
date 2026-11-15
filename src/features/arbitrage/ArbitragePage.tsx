@@ -61,7 +61,6 @@ export function ArbitragePage() {
   const volumeParam = Number(searchParams.get('volume'))
   const minVolume = Number.isFinite(volumeParam) && volumeParam > 0 ? volumeParam : null
   const liquidOnly = searchParams.get('liquid') !== '0'
-  const singleFiat = searchParams.get('single') === '1'
 
   const asset = useFiltersStore((state) => state.asset)
   const fiat = useFiltersStore((state) => state.fiat)
@@ -99,8 +98,8 @@ export function ArbitragePage() {
     [pairQuery.data, chainsQuery.data, asset, exchanges],
   )
   const thresholds: Thresholds = useMemo(
-    () => ({ minNet, minAiScore, minVolume, liquidOnly, singleFiat }),
-    [minNet, minAiScore, minVolume, liquidOnly, singleFiat],
+    () => ({ minNet, minAiScore, minVolume, liquidOnly }),
+    [minNet, minAiScore, minVolume, liquidOnly],
   )
   const passing = useMemo(
     () => all.filter((item) => passesThresholds(item, thresholds)),
@@ -122,18 +121,7 @@ export function ArbitragePage() {
     [all, history, checkedAt],
   )
 
-  const viewKey = [
-    asset,
-    fiat,
-    kind,
-    amount,
-    minNet,
-    minAiScore,
-    minVolume,
-    liquidOnly,
-    singleFiat,
-    exchanges,
-  ]
+  const viewKey = [asset, fiat, kind, amount, minNet, minAiScore, minVolume, liquidOnly, exchanges]
     .flat()
     .join('|')
   const [pageState, setPageState] = useState({ key: viewKey, page: 1 })
@@ -231,7 +219,6 @@ export function ArbitragePage() {
           thresholds={thresholds}
           onMinVolumeChange={(value) => setParam('volume', value === null ? null : String(value))}
           onLiquidOnlyChange={(value) => setParam('liquid', value ? null : '0')}
-          onSingleFiatChange={(value) => setParam('single', value ? '1' : null)}
           onReset={reset}
         />
 
