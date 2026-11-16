@@ -4,7 +4,6 @@ import axios, { AxiosError, type AxiosAdapter, type InternalAxiosRequestConfig }
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 
 import { Providers } from '@/app/providers'
-import { GoogleCallbackPage } from '@/features/auth/GoogleCallbackPage'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { RegisterPage } from '@/features/auth/RegisterPage'
 import { passwordScore, validateRegistration } from '@/features/auth/validation'
@@ -30,7 +29,6 @@ function authResponse(token = 'access-1', refresh = 'refresh-1'): AuthResponse {
       role: 'user',
       status: 'active',
       telegram_connected: false,
-      google_connected: false,
       notify_email: null,
       email_alerts_available: true,
       telegram_alerts_available: true,
@@ -51,7 +49,6 @@ function renderAuth(path: string, state?: unknown) {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
-          <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
           <Route path="/" element={<p>Головна сторінка</p>} />
           <Route path="/arbitrage" element={<p>Сторінка арбітражу</p>} />
         </Routes>
@@ -268,62 +265,5 @@ describe('токени в API-клієнті', () => {
     await expect(apiClient.get('/me')).rejects.toMatchObject({ status: 401 })
     expect(useAuthStore.getState().session).toBeNull()
     expect(localStorage.getItem(STORAGE_KEY)).toBeNull()
-  })
-})
-
-describe('вхід через Google', () => {
-  function googleLink() {
-    return screen.getByRole('link', { name: /Продовжити з Google/ })
-  }
-
-  it('кнопка веде на бекенд з адресою повернення й сторінкою після входу', () => {
-    renderAuth('/register', { from: '/arbitrage' })
-    const url = new URL(googleLink().getAttribute('href')!, 'http://localhost')
-    expect(url.pathname).toBe('/api/v1/auth/google/start')
-    expect(url.searchParams.get('origin')).toBe(window.location.origin)
-    expect(url.searchParams.get('next')).toBe('/arbitrage')
-  })
-
-  it('запам’ятовує вибір «Запам’ятати мене» до повернення з Google', async () => {
-    renderAuth('/login')
-    await userEvent.click(screen.getByText('Запам’ятати мене'))
-    googleLink().addEventListener('click', (event) => event.preventDefault())
-    await userEvent.click(googleLink())
-    expect(sessionStorage.getItem('upars-google-remember')).toBe('0')
-  })
-
-  it('помилка з бекенду показується на сторінці входу', () => {
-    renderAuth('/login?error=account_blocked')
-    expect(screen.getByRole('alert')).toHaveTextContent('Акаунт заблоковано або призупинено.')
-  })
-
-  it('одноразовий код обмінюється на сесію й веде на next', async () => {
-    sessionStorage.setItem('upars-google-remember', '0')
-    const post = vi.spyOn(apiClient, 'post').mockResolvedValue({ data: authResponse('g-access') })
-    renderAuth('/auth/google/callback?code=login-code&next=/arbitrage')
-
-    expect(await screen.findByText('Сторінка арбітражу')).toBeInTheDocument()
-    expect(post).toHaveBeenCalledWith('/auth/google/exchange', { code: 'login-code' })
-    expect(useAuthStore.getState().session?.accessToken).toBe('g-access')
-    expect(useAuthStore.getState().remember).toBe(false)
-    expect(sessionStorage.getItem('upars-google-remember')).toBeNull()
-  })
-
-  it('чужий next не виводить за межі сайту', async () => {
-    vi.spyOn(apiClient, 'post').mockResolvedValue({ data: authResponse('g-2') })
-    renderAuth('/auth/google/callback?code=login-code-2&next=//evil.example')
-    expect(await screen.findByText('Головна сторінка')).toBeInTheDocument()
-  })
-
-  it('без коду або з простроченим кодом пропонує спробувати ще раз', async () => {
-    vi.spyOn(apiClient, 'post').mockRejectedValue(
-      new ApiError('Код входу недійсний або вже використаний', { status: 401 }),
-    )
-    renderAuth('/auth/google/callback?code=used-code')
-    expect(await screen.findByRole('alert')).toHaveTextContent('Код входу недійсний')
-    expect(screen.getByRole('link', { name: 'Спробувати ще раз' })).toHaveAttribute(
-      'href',
-      '/login',
-    )
   })
 })

@@ -120,13 +120,7 @@ export const apiClient = axios.create({
   headers: { Accept: 'application/json' },
 })
 
-const AUTH_PATHS = [
-  '/auth/login',
-  '/auth/register',
-  '/auth/google/exchange',
-  '/auth/refresh',
-  '/auth/logout',
-]
+const AUTH_PATHS = ['/auth/login', '/auth/register', '/auth/refresh', '/auth/logout']
 
 let refreshing: Promise<string | null> | null = null
 

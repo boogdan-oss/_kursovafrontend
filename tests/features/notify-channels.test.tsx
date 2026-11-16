@@ -17,7 +17,6 @@ const USER: User = {
   role: 'user',
   status: 'active',
   telegram_connected: true,
-  google_connected: false,
   notify_email: null,
   email_alerts_available: true,
   telegram_alerts_available: true,

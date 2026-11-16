@@ -64,7 +64,7 @@ export function ProfilePage() {
             checking={me.isFetching}
             onCheck={() => void me.refetch()}
           />
-          <AccountPanel user={user} />
+          <AccountPanel />
         </aside>
       </div>
     </div>

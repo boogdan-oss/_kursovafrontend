@@ -75,7 +75,6 @@ function signIn(role: User['role'], id = 1) {
         role,
         status: 'active',
         telegram_connected: false,
-        google_connected: false,
         settings: {},
         created_at: '2026-10-01T10:00:00Z',
       },

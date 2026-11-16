@@ -710,11 +710,9 @@ export function NotificationsPanel({ user, checking, onCheck }: NotificationsPan
 }
 
 function PasswordDialog({
-  user,
   open,
   onOpenChange,
 }: {
-  user: User
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
@@ -769,11 +767,6 @@ function PasswordDialog({
           </DialogDescription>
         </DialogHeader>
         <form noValidate onSubmit={submit} className="flex flex-col gap-3">
-          {user.google_connected && (
-            <p className="text-meta text-muted-foreground">
-              Якщо ви реєструвалися через Google і пароля не задавали, змінити його тут не вдасться.
-            </p>
-          )}
           {field('current', 'Поточний пароль', 'current-password')}
           {field('next', 'Новий пароль', 'new-password')}
           <PasswordStrength password={values.next} />
@@ -793,7 +786,7 @@ function PasswordDialog({
   )
 }
 
-export function AccountPanel({ user }: { user: User }) {
+export function AccountPanel() {
   const navigate = useNavigate()
   const logout = useLogout()
   const [changing, setChanging] = useState(false)
@@ -815,7 +808,7 @@ export function AccountPanel({ user }: { user: User }) {
       >
         Вийти
       </Button>
-      <PasswordDialog user={user} open={changing} onOpenChange={setChanging} />
+      <PasswordDialog open={changing} onOpenChange={setChanging} />
     </Panel>
   )
 }

@@ -107,7 +107,6 @@ function signIn(role: 'user' | 'admin' = 'user') {
       role,
       status: 'active',
       telegram_connected: false,
-      google_connected: false,
       settings: {},
       created_at: '2026-10-01T10:00:00Z',
     },

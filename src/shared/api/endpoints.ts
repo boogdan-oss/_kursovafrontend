@@ -21,8 +21,6 @@ export const endpoints = {
   assistantChat: '/assistant/chat',
   authLogin: '/auth/login',
   authRegister: '/auth/register',
-  authGoogleStart: '/auth/google/start',
-  authGoogleExchange: '/auth/google/exchange',
   authRefresh: '/auth/refresh',
   authLogout: '/auth/logout',
   me: '/me',

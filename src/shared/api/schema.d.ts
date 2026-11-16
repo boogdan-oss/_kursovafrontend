@@ -239,38 +239,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/auth/google/start": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["google_start_api_v1_auth_google_start_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/google/exchange": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["google_exchange_api_v1_auth_google_exchange_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/me": {
         parameters: {
             query?: never;
@@ -1077,9 +1045,6 @@ export interface components {
             age_sec?: number | null;
             stale: boolean;
         };
-        GoogleExchangeRequest: {
-            code: string;
-        };
         HTTPValidationError: {
             detail?: components["schemas"]["ValidationError"][];
         };
@@ -1504,7 +1469,6 @@ export interface components {
             role: components["schemas"]["UserRole"];
             status: components["schemas"]["UserStatus"];
             telegram_connected: boolean;
-            google_connected: boolean;
             notify_email: string | null;
             email_alerts_available: boolean;
             telegram_alerts_available: boolean;
@@ -2015,65 +1979,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
-            };
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    google_start_api_v1_auth_google_start_get: {
-        parameters: {
-            query?: {
-                origin?: string | null;
-                next?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            302: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    google_exchange_api_v1_auth_google_exchange_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["GoogleExchangeRequest"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AuthResponse"];
-                };
             };
             422: {
                 headers: {
