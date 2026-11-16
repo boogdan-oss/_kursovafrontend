@@ -156,6 +156,11 @@ describe('сповіщення в реальному часі', () => {
       await screen.findByRole('link', { name: 'Сповіщення: 1 непрочитане' }),
     ).toBeInTheDocument()
 
+    await userEvent.click(screen.getByRole('button', { name: 'Закрити сповіщення' }))
+    await waitFor(() => expect(screen.queryByText('USDT/UAH · Bybit')).not.toBeInTheDocument())
+
+    act(() => socket.listener!(alertEvent({ id: 22, rule_title: 'USDT/UAH · Bybit' })))
+    expect(await screen.findByText('USDT/UAH · Bybit')).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Переглянути' }))
     expect(await screen.findByText('Сторінка сповіщень')).toBeInTheDocument()
   })

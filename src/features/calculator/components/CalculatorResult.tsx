@@ -2,13 +2,7 @@ import { Info } from 'lucide-react'
 
 import { feeBreakdown, passesRisk, type FeePart } from '@/features/calculator/lib'
 import type { CalculatorResponse } from '@/shared/api/types'
-import {
-  formatCrypto,
-  formatFiat,
-  formatNumber,
-  formatPercent,
-  formatRatio,
-} from '@/shared/lib/format'
+import { formatFiat, formatNumber, formatPercent, formatRatio } from '@/shared/lib/format'
 import { cn } from '@/shared/lib/utils'
 import { Badge } from '@/shared/ui/badge'
 import { Card, CardTitle } from '@/shared/ui/card'
@@ -83,8 +77,8 @@ export function CalculatorResult({
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
-          label="Кількість (Q)"
-          value={formatCrypto(deal.quantity, asset, { maxDigits: 4 })}
+          label={`Кількість (Q), ${asset}`}
+          value={formatNumber(deal.quantity, { minDigits: 2, maxDigits: 4 })}
           delta="Investment / P_buy"
         />
         <StatCard

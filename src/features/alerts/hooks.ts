@@ -50,7 +50,8 @@ export function useLiveAlerts() {
       id: `alert-${data.id}`,
       description: data.text,
       duration: ALERT_TOAST_MS,
-      classNames: { description: 'whitespace-pre-line' },
+      closeButton: true,
+      classNames: { title: 'pr-7', description: 'whitespace-pre-line break-words pr-1' },
       action: { label: 'Переглянути', onClick: () => navigate('/alerts') },
     })
   })

@@ -137,7 +137,8 @@ describe('сторінка «Калькулятор»', () => {
     expect(screen.getByText('Угода проходить ваш поріг ризику')).toBeInTheDocument()
     expect(screen.getByText('slippage 0,22%')).toBeInTheDocument()
     expect(screen.getByText('ціну задано вручну')).toBeInTheDocument()
-    expect(screen.getByText((text) => plain(text) === '487,80 USDT')).toBeInTheDocument()
+    expect(screen.getByText('Кількість (Q), USDT')).toBeInTheDocument()
+    expect(screen.getByText((text) => plain(text) === '487,80')).toBeInTheDocument()
   })
 
   it('без цін у режимі калькулятора просить їх увести', async () => {
