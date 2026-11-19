@@ -9,6 +9,7 @@ export type FeedPage = Schema<'FeedPage'>
 export type CommentView = Schema<'CommentView'>
 export type CommentsResponse = Schema<'CommentsResponse'>
 export type ProfileView = Schema<'ProfileView'>
+export type UserHit = Schema<'UserHit'>
 export type ReportView = Schema<'ReportView'>
 export type TrendingPair = Schema<'TrendingPair'>
 export type TrendingPairsResponse = Schema<'TrendingResponse'>

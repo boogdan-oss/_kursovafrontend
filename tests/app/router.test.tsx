@@ -93,9 +93,23 @@ describe('маршрути', () => {
 })
 
 describe('шапка', () => {
-  it('клавіша «/» ставить курсор у пошук', () => {
+  const SEARCH = 'Пошук пари, біржі або користувача'
+
+  afterEach(() => vi.restoreAllMocks())
+
+  it('на широкому екрані клавіша «/» ставить курсор у пошук', () => {
+    vi.spyOn(HTMLElement.prototype, 'getClientRects').mockReturnValue({
+      length: 1,
+    } as DOMRectList)
     renderAt('/')
     fireEvent.keyDown(document.body, { key: '/' })
-    expect(screen.getByRole('searchbox', { name: 'Пошук пари або біржі' })).toHaveFocus()
+    expect(screen.getByRole('combobox', { name: SEARCH })).toHaveFocus()
+  })
+
+  it('на вузькому екрані клавіша «/» відкриває вікно пошуку', async () => {
+    renderAt('/')
+    fireEvent.keyDown(document.body, { key: '/' })
+    const dialog = await screen.findByRole('dialog', { name: 'Пошук' })
+    expect(within(dialog).getByRole('combobox', { name: SEARCH })).toHaveFocus()
   })
 })

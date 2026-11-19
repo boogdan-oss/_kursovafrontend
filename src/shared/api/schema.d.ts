@@ -47,6 +47,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/markets/pairs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_pairs_api_v1_markets_pairs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/market/snapshot": {
         parameters: {
             query?: never;
@@ -621,6 +637,22 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["edit_comment_api_v1_community_comments__comment_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/community/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["find_users_api_v1_community_users_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/community/users/{username}": {
@@ -1260,9 +1292,19 @@ export interface components {
             asset: string;
             fiat: string;
         };
+        PairItem: {
+            asset: string;
+            fiat: string;
+            exchanges: string[];
+            collected: boolean;
+        };
         PairRef: {
             asset: string;
             fiat: string;
+        };
+        PairsResponse: {
+            count: number;
+            items: components["schemas"]["PairItem"][];
         };
         PingResponse: {
             message: string;
@@ -1460,6 +1502,12 @@ export interface components {
         TrendingResponse: {
             items: components["schemas"]["TrendingPair"][];
         };
+        UserHit: {
+            username: string;
+            display_name?: string | null;
+            role: "user" | "admin" | "owner";
+            posts: number;
+        };
         UserOut: {
             id: number;
             username: string;
@@ -1611,6 +1659,25 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_pairs_api_v1_markets_pairs_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PairsResponse"];
                 };
             };
         };
@@ -3017,6 +3084,36 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CommentView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    find_users_api_v1_community_users_get: {
+        parameters: {
+            query: {
+                query: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserHit"][];
                 };
             };
             422: {
